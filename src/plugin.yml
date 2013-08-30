@@ -1,0 +1,18 @@
+name: SimonSays
+main: net.edencampo.simonsays.SimonSays
+version: 1.0.0
+author: Eden.Campo
+
+commands:
+  simonhelp:
+      description: SimonSays Help Command
+      usage: /<command>
+  createarena:
+      description: SimonSays Create Arena
+      usage: /<command>
+  simonjoin:
+      description: SimonSays Join Arena
+      usage: /<command> <ArenaID>
+  simonleave:
+      description: SimonSays Leave Arena
+      usage: /<command> 
