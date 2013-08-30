@@ -28,7 +28,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SimonSays extends JavaPlugin implements Listener
 {
 	/*
-	 * TODO: RENAME: SimonArenaManager - SimonGameArenaManger
 	 * TODO: ADD: SimonSpecArenaManager
 	 * TODO: FIX: Config Errors
 	 * TODO: POST: BukkitDev.org post
@@ -66,7 +65,6 @@ public class SimonSays extends JavaPlugin implements Listener
 		CheckUpdate();
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
-		
 		
 		//20 L - Second
 		Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonSGC, 0L, 75L);
@@ -118,11 +116,18 @@ public class SimonSays extends JavaPlugin implements Listener
 				player.sendMessage(SimonTag + "TODO: Finish /simonhelp");
 				return true;
 			}
-			else if(cmd.getName().equalsIgnoreCase("createarena"))
+			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
 			{
-		  		SimonArenaManager.getManager().createArena(player.getLocation());
-	    		player.sendMessage(SimonTag + "Created arena at " + player.getLocation().toString());
-	    		SimonLog.logInfo(player.getName() + " Created arena at " + player.getLocation().toString());
+		  		SimonGameArenaManager.getGameManager().createArena(player.getLocation());
+	    		player.sendMessage(SimonTag + "Created Game arena at " + player.getLocation().toString());
+	    		SimonLog.logInfo(player.getName() + " Created Game arena at " + player.getLocation().toString());
+				return true;
+			}
+			else if(cmd.getName().equalsIgnoreCase("createspecarena"))
+			{
+		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation());
+	    		player.sendMessage(SimonTag + "Created Spectate arena at " + player.getLocation().toString());
+	    		SimonLog.logInfo(player.getName() + " Created Spectate arena at " + player.getLocation().toString());
 				return true;
 			}
 			else if(cmd.getName().equalsIgnoreCase("simonjoin") || CommandLabel.equalsIgnoreCase("sj"))
@@ -145,7 +150,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	    		    SimonLog.logWarning(player.getName() + " has triggered Invalid SimonArena ID");
 	    		}
 	    		
-	    		SimonArenaManager.getManager().addPlayer(player, num);
+	    		SimonGameArenaManager.getGameManager().addPlayer(player, num);
 	    		player.setGameMode(GameMode.SURVIVAL);
 	    		
 				return true;
@@ -153,7 +158,8 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			else if(CommandLabel.equalsIgnoreCase("simonleave") || CommandLabel.equalsIgnoreCase("sl"))
 			{
-	    		SimonArenaManager.getManager().removePlayer(player);
+	    		SimonGameArenaManager.getGameManager().removePlayer(player);
+	    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, 1);
 	    		player.sendMessage(SimonTag + "Successfully left the SimonArena!");
 				return true;
 			}
@@ -169,28 +175,36 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Player p = e.getPlayer();
 		
-		if(SimonArenaManager.getManager().IsPlaying(p))
+		if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 		{
 			switch(SimonGameType)
 			{
 				case SGAME_DONTMOVE:
 				{
 					p.sendMessage(SimonTag + "[SGAME_DONTMOVE] Incorrect! Abandoned Game!");
-					SimonArenaManager.getManager().removePlayer(p);
+					SimonGameArenaManager.getGameManager().removePlayer(p);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 					break;
 				}
 				
 				case SGAME_WALK:
 				{
-					p.sendMessage(SimonTag + "[SGAME_WALK] Correct! Lets Continue!");
 					SimonSGM.SimonActionSetDone(p);
+					
+					if(!SimonSGM.SimonMsgSent(p))
+					{
+						p.sendMessage(SimonTag + "[SGAME_WALK] Correct! Lets Continue!");
+						SimonSGM.SimonSetMsgSent(p);
+					}
+					
 					break;
 				}
 				
 				case SGAME_FAKEWALK:
 				{
 					p.sendMessage(SimonTag + "[SGAME_FAKEWALK] Incorrect! Abandoned Game!");
-					SimonArenaManager.getManager().removePlayer(p);
+					SimonGameArenaManager.getGameManager().removePlayer(p);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 					break;
 				}
 				
@@ -202,8 +216,13 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(block.getType() == Material.AIR)
 						{
-							p.sendMessage(SimonTag + "[SGAME_JUMP] Correct! Lets Continue!");
 							SimonSGM.SimonActionSetDone(p);
+							
+							if(!SimonSGM.SimonMsgSent(p))
+							{
+								p.sendMessage(SimonTag + "[SGAME_JUMP] Correct! Lets Continue!");
+								SimonSGM.SimonSetMsgSent(p);
+							}
 						}
 					}
 					
@@ -219,7 +238,8 @@ public class SimonSays extends JavaPlugin implements Listener
 						if(block.getType() == Material.AIR)
 						{
 							p.sendMessage(SimonTag + "[SGAME_FAKEJUMP] Incorrect! Abandoned Game!");
-							SimonArenaManager.getManager().removePlayer(p);
+							SimonGameArenaManager.getGameManager().removePlayer(p);
+							SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 						}
 					}
 				}
@@ -234,21 +254,29 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Player p = e.getPlayer();
 		
-		if(SimonArenaManager.getManager().IsPlaying(p))
+		if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 		{
 			switch(SimonGameType)
 			{
 				case SGAME_SNEAK:
 				{
-					p.sendMessage(SimonTag + "[SGAME_SNEAK] Correct! Lets Continue!");
 					SimonSGM.SimonActionSetDone(p);
+					
+					if(!SimonSGM.SimonMsgSent(p))
+					{
+						p.sendMessage(SimonTag + "[SGAME_SNEAK] Correct! Lets Continue!");
+						SimonSGM.SimonSetMsgSent(p);
+					}
+					
+					
 					break;
 				}
 				
 				case SGAME_FAKESNEAK:
 				{
 					p.sendMessage(SimonTag + "[SGAME_FAKESNEAK] Incorrect! Abandoned Game!");
-					SimonArenaManager.getManager().removePlayer(p);
+					SimonGameArenaManager.getGameManager().removePlayer(p);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 				}
 			
 			}
@@ -261,22 +289,32 @@ public class SimonSays extends JavaPlugin implements Listener
 		SimonGame SimonGameType = this.SimonSGC.GetGame();
 		
 		Player p = e.getPlayer();
+		Boolean Sprinting = e.isSprinting();
 		
-		if(SimonArenaManager.getManager().IsPlaying(p))
+		if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 		{
 			switch(SimonGameType)
 			{
 				case SGAME_SPRINT:
 				{
-					p.sendMessage(SimonTag + "[SGAME_SPRINT] Correct! Lets Continue!");
-					SimonSGM.SimonActionSetDone(p);
+					if(Sprinting == true)
+					{
+						SimonSGM.SimonActionSetDone(p);
+						
+						if(!SimonSGM.SimonMsgSent(p))
+						{
+							p.sendMessage(SimonTag + "[SGAME_SPRINT] Correct! Lets Continue!");
+							SimonSGM.SimonSetMsgSent(p);
+						}
+					}
 					break;
 				}
 				
 				case SGAME_FAKESPRINT:
 				{
 					p.sendMessage(SimonTag + "[SGAME_FAKESPRINT] Incorrect! Abandoned Game!");
-					SimonArenaManager.getManager().removePlayer(p);
+					SimonGameArenaManager.getGameManager().removePlayer(p);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 				}
 			
 			}
@@ -292,7 +330,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Block block = e.getClickedBlock();
 		
-		if(SimonArenaManager.getManager().IsPlaying(p))
+		if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 		{
 			if(block != null)
 			{
@@ -300,15 +338,22 @@ public class SimonSays extends JavaPlugin implements Listener
 				{
 					case SGAME_PUNCHBLOCK:
 					{
-						p.sendMessage(SimonTag + "[SGAME_PUNCHBLOCK] Correct! Lets Continue!");
+						
 						SimonSGM.SimonActionSetDone(p);
+						if(!SimonSGM.SimonMsgSent(p))
+						{
+							p.sendMessage(SimonTag + "[SGAME_PUNCHBLOCK] Correct! Lets Continue!");
+							SimonSGM.SimonSetMsgSent(p);
+						}
+						
 						break;
 					}
 					
 					case SGAME_FAKEPUNCHBLOCK:
 					{
 						p.sendMessage(SimonTag + "[SGAME_FAKEPUNCHBLOCK] Incorrect! Abandoned Game!");
-						SimonArenaManager.getManager().removePlayer(p);
+						SimonGameArenaManager.getGameManager().removePlayer(p);
+						SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 					}
 				}
 			}
@@ -326,27 +371,33 @@ public class SimonSays extends JavaPlugin implements Listener
 		{
 			Player p = (Player)entattacker;
 			
-			if(SimonArenaManager.getManager().IsPlaying(p))
+			if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 			{
 				switch(SimonGameType)
 				{
 					case SGAME_ATTACKPLAYER:
 					{
-						p.sendMessage(SimonTag + "[SGAME_ATTACKPLAYER] Correct! Lets Continue!");
 						SimonSGM.SimonActionSetDone(p);
+						
+						if(!SimonSGM.SimonMsgSent(p))
+						{
+							p.sendMessage(SimonTag + "[SGAME_ATTACKPLAYER] Correct! Lets Continue!");
+							SimonSGM.SimonSetMsgSent(p);
+						}
+						
 						break;
 					}
 					
 					case SGAME_FAKEATTACKPLAYER:
 					{
 						p.sendMessage(SimonTag + "[SGAME_FAKEATTACKPLAYER] Incorrect! Abandoned Game!");
-						SimonArenaManager.getManager().removePlayer(p);
+						SimonGameArenaManager.getGameManager().removePlayer(p);
+						SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 					}
 				}
 			}
 		}
 	}
-	
 	/*
 	 	SGAME_NONE(DONE),
 		SGAME_DONTMOVE(DONE, GOTTA FIX),

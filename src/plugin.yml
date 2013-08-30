@@ -7,8 +7,11 @@ commands:
   simonhelp:
       description: SimonSays Help Command
       usage: /<command>
-  createarena:
-      description: SimonSays Create Arena
+  creategamearena:
+      description: SimonSays Create Game Arena
+      usage: /<command>
+  createspecarena:
+      description: SimonSays Create Spectate Arena
       usage: /<command>
   simonjoin:
       description: SimonSays Join Arena

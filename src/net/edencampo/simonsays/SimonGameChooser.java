@@ -28,6 +28,8 @@ public class SimonGameChooser implements Runnable
 		
 		int RandomNum = SimonRandomGame.nextInt(14);
 		
+		//plugin.getServer().getScheduler().cancelAllTasks();
+		
 		switch(RandomNum)
 		{
 			case 1:
@@ -38,37 +40,31 @@ public class SimonGameChooser implements Runnable
 			case 2:
 			{
 				result = SimonGame.SGAME_SNEAK;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 3:
 			{
 				result = SimonGame.SGAME_JUMP;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 4:
 			{
 				result = SimonGame.SGAME_ATTACKPLAYER;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 5:
 			{
 				result = SimonGame.SGAME_PUNCHBLOCK;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 6:
 			{
 				result = SimonGame.SGAME_SPRINT;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 7:
 			{
 				result = SimonGame.SGAME_WALK;
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 190L);
 				break;
 			}
 			case 8:
@@ -109,10 +105,11 @@ public class SimonGameChooser implements Runnable
 		
 		for(Player p : plugin.getServer().getOnlinePlayers())
 		{
-			if(SimonArenaManager.getManager().IsPlaying(p))
+			if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 			{
-				BroadCastGame(p);
 				plugin.SimonSGM.playerscompleted.clear();
+				plugin.SimonSGM.playermesseged.clear();
+				BroadCastGame(p);
 			}
 		}
 	}
@@ -123,91 +120,105 @@ public class SimonGameChooser implements Runnable
 		{
 			case SGAME_NONE:
 			{
-				player.sendMessage(SimonTag + "Simon Says NONE!");
+				player.sendMessage(SimonTag + "Simon Says NONE! [Report the ERROR]");
 				break;
 			}
 			
 			case SGAME_DONTMOVE:
 			{
 				player.sendMessage(SimonTag + "Simon Says DONT MOVE!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_FAKEDONTMOVE:
 			{
 				player.sendMessage(SimonTag + "DONT MOVE!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_SNEAK:
 			{
 				player.sendMessage(SimonTag + "Simon Says SNEAK!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKESNEAK:
 			{
 				player.sendMessage(SimonTag + "SNEAK!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_JUMP:
 			{
 				player.sendMessage(SimonTag + "Simon Says JUMP!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKEJUMP:
 			{
 				player.sendMessage(SimonTag + "JUMP!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_ATTACKPLAYER:
 			{
 				player.sendMessage(SimonTag + "Simon Says Attack a Player!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKEATTACKPLAYER:
 			{
 				player.sendMessage(SimonTag + "Attack a Player!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_PUNCHBLOCK:
 			{
 				player.sendMessage(SimonTag + "Simon Says Punch a BLOCK!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKEPUNCHBLOCK:
 			{
 				player.sendMessage(SimonTag + "Punch a BLOCK!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_SPRINT:
 			{
 				player.sendMessage(SimonTag + "Simon Says SPRINT!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKESPRINT:
 			{
 				player.sendMessage(SimonTag + "SPRINT!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_WALK:
 			{
 				player.sendMessage(SimonTag + "Simon Says WALK!");
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
 			case SGAME_FAKEWALK:
 			{
 				player.sendMessage(SimonTag + "WALK!");
+				plugin.SimonSGM.SimonActionSetDone(player);
 			}
 		}
 	}
