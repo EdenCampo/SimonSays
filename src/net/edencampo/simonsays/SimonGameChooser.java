@@ -28,7 +28,15 @@ public class SimonGameChooser implements Runnable
 		
 		int RandomNum = SimonRandomGame.nextInt(14);
 		
-		//plugin.getServer().getScheduler().cancelAllTasks();
+		/*
+		 * 
+		 * FREEZES SERVER NEED FIX
+		 * 
+		 * 
+		plugin.getServer().getScheduler().cancelTask(plugin.getSimonSGCTask());
+		plugin.getServer().getScheduler().cancelTask(plugin.getSimonSGMTask());
+		plugin.runGame();
+		*/
 		
 		switch(RandomNum)
 		{
@@ -116,6 +124,8 @@ public class SimonGameChooser implements Runnable
 	
 	public void BroadCastGame(Player player)
 	{
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 115L);
+		
 		switch(result)
 		{
 			case SGAME_NONE:
@@ -141,7 +151,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_SNEAK:
 			{
 				player.sendMessage(SimonTag + "Simon Says SNEAK!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
@@ -155,7 +164,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_JUMP:
 			{
 				player.sendMessage(SimonTag + "Simon Says JUMP!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
@@ -169,7 +177,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_ATTACKPLAYER:
 			{
 				player.sendMessage(SimonTag + "Simon Says Attack a Player!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
@@ -183,7 +190,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_PUNCHBLOCK:
 			{
 				player.sendMessage(SimonTag + "Simon Says Punch a BLOCK!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
@@ -197,7 +203,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_SPRINT:
 			{
 				player.sendMessage(SimonTag + "Simon Says SPRINT!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			
@@ -211,7 +216,6 @@ public class SimonGameChooser implements Runnable
 			case SGAME_WALK:
 			{
 				player.sendMessage(SimonTag + "Simon Says WALK!");
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, plugin.SimonSGM, 185L);
 				break;
 			}
 			

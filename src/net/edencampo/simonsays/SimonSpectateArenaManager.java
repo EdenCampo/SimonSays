@@ -101,7 +101,7 @@ public class SimonSpectateArenaManager
 		*/
 	}
 	
-	public void loadGames()
+	public void loadSpecArenas()
 	{
 		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
 		{

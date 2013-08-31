@@ -22,6 +22,7 @@ public class SimonGameArenaManager
 	Map<String, ItemStack[]> armor = new HashMap<String, ItemStack[]>();
 
 	List<GameArena> arenas = new ArrayList<GameArena>();
+	
 	int arenaSize = 0;
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
@@ -68,7 +69,6 @@ public class SimonGameArenaManager
 	    p.getInventory().clear();
 	    
 	    p.teleport(a.spawn);
-	    //GameListener.add(p);
 	}
 	   
 
@@ -98,6 +98,12 @@ public class SimonGameArenaManager
 	       
 	   inv.remove(p.getName());
 	   armor.remove(p.getName());
+	   
+	   if(a.getPlayers().size() == 0)
+	   {
+		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " is the Winner!");
+	   }
+	   
 	   //p.teleport(locs.get(p.getName()));
 	   //locs.remove(p.getName());	
 	}
@@ -153,7 +159,33 @@ public class SimonGameArenaManager
 		return false;
 	}
 	
-	public void loadGames()
+	public boolean gameInProgress(int i)
+	{
+		GameArena a = getArena(i);
+	    if(a == null)
+	    {
+	        return true;
+	    }
+		
+		int count = 0;
+		  
+		for(GameArena arena : arenas)
+		{
+			if(arena == a)
+			{
+				count = a.getPlayers().size();
+			}
+		}
+		  
+		if(count > 1)
+		{
+			return true;
+		}
+	
+		return false;
+	}
+	
+	public void loadGameArenas()
 	{
 		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
 		{

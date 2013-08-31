@@ -65,6 +65,7 @@ public class SimonGameManager implements Runnable
 				if(!SimonActionCompleted(p))
 				{
 					SimonGameArenaManager.getGameManager().removePlayer(p);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
 					p.sendMessage(SimonTag + "Action not completed! Abandoned Game!");
 				}
 			}

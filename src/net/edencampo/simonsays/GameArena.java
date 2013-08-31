@@ -7,24 +7,31 @@ import org.bukkit.Location;
 
 public class GameArena
 {
-	  int number = 0;
-	  Location spawn = null;
-	  List<String> players = new ArrayList<String>();
+	SimonSays plugin;
 	
-	  public GameArena(Location loc, int id)
-	  {
-	    this.spawn = loc;
-	    this.number = id;
-	  }
+	public GameArena(SimonSays instance)
+	{
+		this.plugin = instance;
+	}
 	
-	  public int getId()
-	  {
-	    return this.number;
-	  }
+	int number = 0;
+	Location spawn = null;
+	List<String> players = new ArrayList<String>();
+	boolean inProgress = false;
 	
-	  public List<String> getPlayers()
-	  {
-	    return this.players;
-	  }
-
+	public GameArena(Location loc, int id)
+	{
+	  this.spawn = loc;
+	  this.number = id;
+	}
+	
+	public int getId()
+	{
+	  return this.number;
+	}
+	
+	public List<String> getPlayers()
+	{
+	  return this.players;
+	}
 }

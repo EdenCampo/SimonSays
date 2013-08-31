@@ -6,12 +6,16 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -28,7 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SimonSays extends JavaPlugin implements Listener
 {
 	/*
-	 * TODO: ADD: SimonSpecArenaManager
+	 * TODO: CHANGE: ArenaID to ArenaNAME
 	 * TODO: FIX: Config Errors
 	 * TODO: POST: BukkitDev.org post
 	 */
@@ -58,6 +62,9 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
+	int SimonSGCTask;
+	int SimonSGMTask;
+	
 	public void onEnable()
 	{
 		//this.saveDefaultConfig();
@@ -66,8 +73,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
 		
-		//20 L - Second
-		Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonSGC, 0L, 75L);
+		SimonSGCTask = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonSGC, 0L, 75L);
 		
 		SimonLog.logInfo("Successfully loaded!");
 	}
@@ -150,8 +156,15 @@ public class SimonSays extends JavaPlugin implements Listener
 	    		    SimonLog.logWarning(player.getName() + " has triggered Invalid SimonArena ID");
 	    		}
 	    		
-	    		SimonGameArenaManager.getGameManager().addPlayer(player, num);
-	    		player.setGameMode(GameMode.SURVIVAL);
+	    		if(!SimonGameArenaManager.getGameManager().gameInProgress(num))
+	    		{
+		    		SimonGameArenaManager.getGameManager().addPlayer(player, num);
+		    		player.setGameMode(GameMode.SURVIVAL);	
+	    		}
+	    		else
+	    		{
+	    			player.sendMessage(SimonTag + "Woops! Game is already in progress!");
+	    		}
 	    		
 				return true;
 			}
@@ -330,25 +343,66 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Block block = e.getClickedBlock();
 		
-		if(SimonGameArenaManager.getGameManager().IsPlaying(p))
+		if(block != null)
 		{
-			if(block != null)
+			BlockState state = block.getState();
+			
+			if(state instanceof Sign)
+			{
+				if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.SIGN || e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.SIGN_POST)
+				{
+					Sign sign = (Sign) state;
+					
+					String[] SignLine = sign.getLines();
+					
+					if(SignLine[0].contains("[SimonSays]"))
+					{
+						if(!SignLine[1].isEmpty())
+						{
+				    		int num = 0;
+				    		
+				    		try
+				    		{
+				    		    num = Integer.parseInt(SignLine[1]);
+				    		}
+				    		catch(NumberFormatException ex)
+				    		{
+				    		    p.sendMessage(SimonTag + "Invalid SimonArena ID");
+				    		    SimonLog.logWarning(p.getName() + " has triggered Invalid SimonArena ID");
+				    		    ex.printStackTrace();
+				    		}
+				    		
+				    		if(!SimonGameArenaManager.getGameManager().gameInProgress(num))
+				    		{
+					    		SimonGameArenaManager.getGameManager().addPlayer(p, num);
+					    		p.setGameMode(GameMode.SURVIVAL);	
+				    		}
+				    		else
+				    		{
+				    			p.sendMessage(SimonTag + "Woops! Game is already in progress!");
+				    		}
+						}
+					}
+				}
+			}
+			
+			if(SimonGameArenaManager.getGameManager().IsPlaying(p))
 			{
 				switch(SimonGameType)
 				{
 					case SGAME_PUNCHBLOCK:
 					{
-						
+							
 						SimonSGM.SimonActionSetDone(p);
 						if(!SimonSGM.SimonMsgSent(p))
 						{
 							p.sendMessage(SimonTag + "[SGAME_PUNCHBLOCK] Correct! Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
 						}
-						
+							
 						break;
 					}
-					
+						
 					case SGAME_FAKEPUNCHBLOCK:
 					{
 						p.sendMessage(SimonTag + "[SGAME_FAKEPUNCHBLOCK] Incorrect! Abandoned Game!");
@@ -360,6 +414,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onHitPlayer(EntityDamageByEntityEvent e)
 	{
@@ -383,6 +438,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						{
 							p.sendMessage(SimonTag + "[SGAME_ATTACKPLAYER] Correct! Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
+							e.setDamage(0);
 						}
 						
 						break;
@@ -393,19 +449,35 @@ public class SimonSays extends JavaPlugin implements Listener
 						p.sendMessage(SimonTag + "[SGAME_FAKEATTACKPLAYER] Incorrect! Abandoned Game!");
 						SimonGameArenaManager.getGameManager().removePlayer(p);
 						SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+						e.setDamage(0);
 					}
 				}
 			}
 		}
 	}
-	/*
-	 	SGAME_NONE(DONE),
-		SGAME_DONTMOVE(DONE, GOTTA FIX),
-		SGAME_SNEAK(DONE),
-		SGAME_JUMP(DONE),
-		SGAME_ATTACKPLAYER(DONE),
-		SGAME_PUNCHBLOCK(DONE),
-		SGAME_SPRINT(DONE),
-		SGAME_WALK(DONE)
-	 */
+	
+	@EventHandler
+	public void onSignChanged(SignChangeEvent e)
+	{
+		String[] SignLine = e.getLines();
+		
+		if(SignLine[0].contains("[SimonSays]"))
+		{
+			if(!SignLine[1].isEmpty())
+			{
+				e.setLine(0, ChatColor.GREEN + "[SimonSays]");
+			}
+		}
+	}
+	
+	public int getSimonSGCTask()
+	{
+		return SimonSGCTask;
+	}
+	
+	public int getSimonSGMTask()
+	{
+		return SimonSGCTask;
+	}
+	
 }
