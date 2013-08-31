@@ -1,9 +1,5 @@
 package net.edencampo.simonsays;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,9 +43,12 @@ public class SimonGameArenaManager
 	    return a;
 	}
 	 
-	public GameArena getArena(String arenaname){
-	    for(GameArena a : arenas){
-	        if(a.getName().equalsIgnoreCase(arenaname)){
+	public GameArena getArena(String arenaname)
+	{
+	    for(GameArena a : arenas)
+	    {
+	        if(a.getName().equalsIgnoreCase(arenaname))
+	        {
 	            return a;
 	        }
 	    }
@@ -112,12 +111,11 @@ public class SimonGameArenaManager
 	   //locs.remove(p.getName());	
 	}
 
-	public void createArena(Location l, String arenaname)
+	public void createArena(Location loc, String arenaname)
 	{
-		int num = arenaSize + 1;
-		arenaSize++;
+	   arenaSize++;
 		
-	   GameArena a = new GameArena(l, arenaname);
+	   GameArena a = new GameArena(loc, arenaname);
 	   arenas.add(a);
 	   
 	   /*
@@ -214,11 +212,7 @@ public class SimonGameArenaManager
 	public Location deserializeLoc(String s)
 	{
 		String[] st = s.split(",");
-		return new Location(Bukkit.getWorld(st[1]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
-	}
-	
-	public int getArenaSize()
-	{
-		return this.arenaSize;
+		//return new Location(Bukkit.getWorld(st[1]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
+		return new Location(Bukkit.getServer().getWorld(st[0]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
 	}
 }	

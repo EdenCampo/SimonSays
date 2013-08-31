@@ -17,7 +17,6 @@ public class GameArena
 	String arenaname = "";
 	Location spawn = null;
 	List<String> players = new ArrayList<String>();
-	boolean inProgress = false;
 	
 	public GameArena(Location loc, String name)
 	{

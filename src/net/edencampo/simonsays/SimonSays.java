@@ -70,7 +70,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
-	MySQL sql = new MySQL(this, ".", ",", ",", ",", ",");
+	MySQL sql = new MySQL(this, "localhost", "3307", "mctest", ".", ".");
 	
 	/*
 	 * # MySQL Details
@@ -93,15 +93,11 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	public void onEnable()
 	{
-		if(this.getConfig() == null)
-		{
-			this.saveDefaultConfig();
-			this.getConfig().options().copyDefaults(true);
-		}
+		saveDefaultConfig();
 		
 		if(UsingMySQL() == true)
 		{
-			SimonLog.logInfo("Detected MySQL usage, preparing!");
+			SimonLog.logInfo("Detected MySQL usage, prepering!");
 			
 			sql.openConnection();
 			
@@ -109,14 +105,14 @@ public class SimonSays extends JavaPlugin implements Listener
 			{
 				Statement createtables = sql.getConnection().createStatement();
 				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
-				SimonLog.logInfo("Successfully executed onEnable queries!");
+				SimonLog.logInfo("Successfully executed onEnable() queries!");
 			} 
 			catch (SQLException e) 
 			{
 				e.printStackTrace();
 			}
 			
-			//this.loadSQLGameArenas();
+			this.loadSQLGameArenas();
 		}
 		CheckUpdate();
 		
@@ -177,10 +173,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 		  		SimonGameArenaManager.getGameManager().createArena(player.getLocation(), arenaname);
 		  		
-		  		int size = SimonGameArenaManager.getGameManager().getArenaSize();
-		  		size++;
-		  		
-		  		AddArenaToSQL(player.getLocation(), arenaname, "0", size);
+		  		AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0");
 		  		
 	    		player.sendMessage(SimonTag + "Created " + arenaname + " at" + player.getLocation().toString());
 	    		
@@ -192,7 +185,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				String arenaname = args[0];
 				
 		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation());
-		  		AddArenaToSQL(player.getLocation(), arenaname, "1", 1);
+		  		AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1");
 		  		
 	    		player.sendMessage(SimonTag + "Created Spectate arena at " + player.getLocation().toString());
 	    		SimonLog.logInfo(player.getName() + " Created Spectate arena at " + player.getLocation().toString());
@@ -545,28 +538,18 @@ public class SimonSays extends JavaPlugin implements Listener
 		return true;
 	}
 	
-	public void AddArenaToSQL(Location location, String arenaname, String type, int unid)
+	public void AddArenaToSQL(String location, String arenaname, String type)
 	{
 		// types: 0-regular 1-spec
 		
 		if(UsingMySQL() == true)
 		{
 			try 
-			{
-				/*
-				19:11:22 [WARNING] [SimonSays] SimonSays 1.0.0: INSERT INTO SimonSays_ArenaName`, `ArenaLocation`, `ArenaType`, 'ArenaID') VALUES ('lol', 'Lold=CraftWorld{name=world},x=121.61313030656288,y=87.0,z=200.5329051157
-				=4.95,yaw=-172.5}, '0', '1');
-				19:11:22 [SEVERE] com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorExce
-				 have an error in your SQL syntax; check the manual that corresponds t
-				QL server version for the right syntax to use near ''ArenaID') VALUES
-				ocation{world=CraftWorld{name=world},x=121.613130306' at line 1
-				*/
-				
+			{	
 				Connection connection = sql.getConnection();
 				
 				Statement createtables = connection.createStatement();
 				
-				//createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `ArenaID`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + unid + "');");
 				createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "');");
 				SimonLog.logInfo("Successfully executed AddArenaToSQL query!");
 			} 
@@ -577,38 +560,91 @@ public class SimonSays extends JavaPlugin implements Listener
 		 }
 	}
 	
-	public void loadSQLGameArenas()
+	
+	public String getSQLGameArenasCount()
 	{
 		if(this.UsingMySQL() == true)
 		{
 			try 
 			{
+				Connection connection = this.sql.getConnection();
 				
+				Statement loadarenas = connection.createStatement();
+				
+				ResultSet res = loadarenas.executeQuery("SELECT ArenaID FROM SimonSays_Arenas;");
+				res.last();
+				
+				String arenacount = res.getString("ArenaID");
+				
+				return arenacount+1;
+			}
+			catch (SQLException e) 
+			{
+				
+			}
+		}
+		
+		return "0";
+	}
+	
+	public void loadSQLGameArenas()
+	{
+		String arenacount = getSQLGameArenasCount();
+		
+		int arenas = Integer.parseInt(arenacount);
+		
+		if(arenas == 0)
+		{
+			return;
+		}
+		
+		if(this.UsingMySQL() == true)
+		{
+			try 
+			{
 				int id = 1;
-				while(id < 20)
+				while(id < arenas)
 				{
+					if(id == 0)
+					{
+						id++;
+						return;
+					}
+					
 					Connection connection = this.sql.getConnection();
 					
 					Statement loadarenas = connection.createStatement();
 					
-					ResultSet res = loadarenas.executeQuery("SELECT * FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					SimonLog.logWarning("SELECT * FROM SimonSays_Arenas WHERE ArenaID = '" + id + "'");
+					ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
 					res.next();
 					
 					String ArenaType = res.getString("ArenaType");
-					String ArenaName = res.getString("ArenaName");
-					String ArenaLocation = res.getString("ArenaLocation");
+					
+					ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+					res1.next();
+					
+					String ArenaName = res1.getString("ArenaName");
+					
+					ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+					res2.next();
+			
+					String ArenaLocation = res2.getString("ArenaLocation");
 					
 					if(ArenaType.equals("0"))
 					{
+						//TODO: FIX - des.loc not working..
 						GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
 						SimonGameArenaManager.getGameManager().arenas.add(a);
+						SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
+						SimonLog.logSevereError("" + SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation));
+						
+						SimonLog.logWarning(ArenaType + "  " + ArenaName + "  " + ArenaLocation);
+						
 						this.SimonLog.logInfo("Successfully added arena:" + ArenaName + " at" + ArenaLocation);
 					}
 					
-					loadarenas.getFetchSize();
-					
 					this.SimonLog.logInfo("Successfully executed loadGameArenas query!");
+					id++;
 				}
 			} 
 			catch (SQLException e) 

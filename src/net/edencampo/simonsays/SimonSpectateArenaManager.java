@@ -101,6 +101,7 @@ public class SimonSpectateArenaManager
 		*/
 	}
 	
+	/*
 	public void loadSpecArenas()
 	{
 		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
@@ -114,6 +115,7 @@ public class SimonSpectateArenaManager
 			arenas.add(a);
 		}
 	}
+	*/
 	
 	public String serializeLoc(Location l)
 	{
@@ -123,6 +125,6 @@ public class SimonSpectateArenaManager
 	public Location deserializeLoc(String s)
 	{
 		String[] st = s.split(",");
-		return new Location(Bukkit.getWorld(st[1]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
+		return new Location(Bukkit.getWorld(st[0]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
 	}
 }

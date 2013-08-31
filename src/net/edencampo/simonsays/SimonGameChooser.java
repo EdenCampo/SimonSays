@@ -28,16 +28,6 @@ public class SimonGameChooser implements Runnable
 		
 		int RandomNum = SimonRandomGame.nextInt(14);
 		
-		/*
-		 * 
-		 * FREEZES SERVER NEED FIX
-		 * 
-		 * 
-		plugin.getServer().getScheduler().cancelTask(plugin.getSimonSGCTask());
-		plugin.getServer().getScheduler().cancelTask(plugin.getSimonSGMTask());
-		plugin.runGame();
-		*/
-		
 		switch(RandomNum)
 		{
 			case 1:
