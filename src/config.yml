@@ -1,4 +1,14 @@
 # Default Configuration for 'SimonSays' - Eden.Campo
 
-Arenas:
-   Arenas:
+
+# Use MySQL or not; If so, enter your details below, else, everything is written on a local config file
+
+useMySQL: false
+
+# If using MySQL; details
+
+host: null
+port: null
+database: null
+user: null
+password: null

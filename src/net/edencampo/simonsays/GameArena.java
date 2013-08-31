@@ -14,20 +14,20 @@ public class GameArena
 		this.plugin = instance;
 	}
 	
-	int number = 0;
+	String arenaname = "";
 	Location spawn = null;
 	List<String> players = new ArrayList<String>();
 	boolean inProgress = false;
 	
-	public GameArena(Location loc, int id)
+	public GameArena(Location loc, String name)
 	{
 	  this.spawn = loc;
-	  this.number = id;
+	  this.arenaname = name;
 	}
 	
-	public int getId()
+	public String getName()
 	{
-	  return this.number;
+	  return this.arenaname;
 	}
 	
 	public List<String> getPlayers()

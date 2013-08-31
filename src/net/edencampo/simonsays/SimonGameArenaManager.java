@@ -1,5 +1,9 @@
 package net.edencampo.simonsays;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,18 +47,18 @@ public class SimonGameArenaManager
 	    return a;
 	}
 	 
-	public GameArena getArena(int i){
+	public GameArena getArena(String arenaname){
 	    for(GameArena a : arenas){
-	        if(a.getId() == i){
+	        if(a.getName().equalsIgnoreCase(arenaname)){
 	            return a;
 	        }
 	    }
 	    return null;
 	}
 	 
-	public void addPlayer(Player p, int i)
+	public void addPlayer(Player p, String arenaname)
 	{
-		GameArena a = getArena(i);
+		GameArena a = getArena(arenaname);
 	    if(a == null)
 	    {
 	        p.sendMessage(SimonTag + "Invalid arena!");
@@ -108,12 +112,12 @@ public class SimonGameArenaManager
 	   //locs.remove(p.getName());	
 	}
 
-	public void createArena(Location l)
+	public void createArena(Location l, String arenaname)
 	{
-	   int num = arenaSize + 1;
-	   arenaSize++;
-	 
-	   GameArena a = new GameArena(l, num);
+		int num = arenaSize + 1;
+		arenaSize++;
+		
+	   GameArena a = new GameArena(l, arenaname);
 	   arenas.add(a);
 	   
 	   /*
@@ -125,7 +129,7 @@ public class SimonGameArenaManager
 	   */
 	}
 	
-	public void removeArena(int i)
+	public void removeArena(String arenaname)
 	{
 		/*
 		for(String s : getArena(i).getPlayers())
@@ -139,7 +143,7 @@ public class SimonGameArenaManager
 		}
 		*/
 		
-		arenas.remove(getArena(i));
+		arenas.remove(getArena(arenaname));
 		
 		/*
 		List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
@@ -159,11 +163,12 @@ public class SimonGameArenaManager
 		return false;
 	}
 	
-	public boolean gameInProgress(int i)
+	public boolean gameInProgress(String arenaname)
 	{
-		GameArena a = getArena(i);
+		GameArena a = getArena(arenaname);
 	    if(a == null)
 	    {
+	    	// Arena not found, return "game in progress" so it wont error.
 	        return true;
 	    }
 		
@@ -185,6 +190,7 @@ public class SimonGameArenaManager
 		return false;
 	}
 	
+	/*
 	public void loadGameArenas()
 	{
 		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
@@ -198,6 +204,8 @@ public class SimonGameArenaManager
 			arenas.add(a);
 		}
 	}
+	*/
+	
 	public String serializeLoc(Location l)
 	{
 		return l.getWorld().getName()+","+l.getBlockX()+","+l.getBlockY()+","+l.getBlockZ();
@@ -207,5 +215,10 @@ public class SimonGameArenaManager
 	{
 		String[] st = s.split(",");
 		return new Location(Bukkit.getWorld(st[1]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
+	}
+	
+	public int getArenaSize()
+	{
+		return this.arenaSize;
 	}
 }	
