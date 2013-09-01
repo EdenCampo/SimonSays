@@ -7,19 +7,19 @@ import org.bukkit.Location;
 
 public class SpectateArena 
 {
-	  int number = 0;
+	  String arenaname = "";
 	  Location spawn = null;
 	  List<String> players = new ArrayList<String>();
 	
-	  public SpectateArena(Location loc, int id)
+	  public SpectateArena(Location loc, String name)
 	  {
 	    this.spawn = loc;
-	    this.number = id;
+	    this.arenaname = name;
 	  }
 	
-	  public int getId()
+	  public String getName()
 	  {
-	    return this.number;
+		return this.arenaname;
 	  }
 	
 	  public List<String> getPlayers()

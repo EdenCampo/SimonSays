@@ -9,7 +9,7 @@ commands:
       usage: /<command>
   creategamearena:
       description: SimonSays Create Game Arena
-      usage: /<command>
+      usage: /<command> <ArenaName> <RelatedArena>
   createspecarena:
       description: SimonSays Create Spectate Arena
       usage: /<command>

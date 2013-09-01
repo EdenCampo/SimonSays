@@ -188,6 +188,17 @@ public class SimonGameArenaManager
 		return false;
 	}
 	
+	public String getArenaIn(Player p)
+	{
+		for(GameArena a : arenas)
+		{
+			if(a.getPlayers().contains(p.getName()))
+				return a.getName();
+		}
+		return "none";
+	}
+	
+	
 	/*
 	public void loadGameArenas()
 	{

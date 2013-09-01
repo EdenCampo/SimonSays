@@ -70,7 +70,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
-	MySQL sql = new MySQL(this, "localhost", "3307", "mctest", ".", ".");
+	MySQL sql;
 	
 	/*
 	 * # MySQL Details
@@ -79,32 +79,38 @@ public class SimonSays extends JavaPlugin implements Listener
 		database: NULL
 		user: NULL
 		password: NULL
-	
-	String sqlHost = this.getConfig().getString("host");
-	String sqlPort = this.getConfig().getString("port");
-	String sqlDb = this.getConfig().getString("database");
-	String sqlUser = this.getConfig().getString("user");
-	String sqlPw = this.getConfig().getString("password");
-	
 	*/
 	
 	int SimonSGCTask;
 	int SimonSGMTask;
 	
+	boolean usingLocalConfig;
+	
 	public void onEnable()
-	{
+	{		
 		saveDefaultConfig();
+		reloadConfig();
 		
 		if(UsingMySQL() == true)
-		{
-			SimonLog.logInfo("Detected MySQL usage, prepering!");
+		{	
+			SimonLog.logInfo("Detected MySQL usage, connecting..");
+			
+			usingLocalConfig = false;
+			
+			String sqlHost = this.getConfig().getString("host");
+			String sqlPort = this.getConfig().getString("port");
+			String sqlDb = this.getConfig().getString("database");
+			String sqlUser = this.getConfig().getString("user");
+			String sqlPw = this.getConfig().getString("password");
+			
+			sql = new MySQL(this, sqlHost, sqlPort, sqlDb, sqlUser, sqlPw);
 			
 			sql.openConnection();
 			
 			try 
 			{
 				Statement createtables = sql.getConnection().createStatement();
-				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
+				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, RelatedArena varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
 				SimonLog.logInfo("Successfully executed onEnable() queries!");
 			} 
 			catch (SQLException e) 
@@ -112,8 +118,14 @@ public class SimonSays extends JavaPlugin implements Listener
 				e.printStackTrace();
 			}
 			
-			this.loadSQLGameArenas();
+			this.SQLLoadGameArenas();
 		}
+		else
+		{
+			SimonLog.logInfo("Using local-config, loading data...");
+			usingLocalConfig = true;
+		}
+		
 		CheckUpdate();
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
@@ -125,7 +137,8 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	public void onDisable()
 	{
-		this.saveConfig();
+		//reloadConfig();
+		//saveConfig();
 		
 		SimonLog.logInfo("Successfully unloaded!");
 	}
@@ -170,10 +183,18 @@ public class SimonSays extends JavaPlugin implements Listener
 			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
 			{
 				String arenaname = args[0];
+				String relatedarena = args[1];
 				
 		  		SimonGameArenaManager.getGameManager().createArena(player.getLocation(), arenaname);
 		  		
-		  		AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0");
+		  		if(UsingMySQL() == true)
+		  		{
+		  			AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
+		  		}
+		  		else
+		  		{
+		  			
+		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created " + arenaname + " at" + player.getLocation().toString());
 	    		
@@ -184,8 +205,16 @@ public class SimonSays extends JavaPlugin implements Listener
 			{
 				String arenaname = args[0];
 				
-		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation());
-		  		AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1");
+		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation(), arenaname);
+		  		
+		  		if(UsingMySQL() == true)
+		  		{
+		  			AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
+		  		}
+		  		else
+		  		{
+		  			
+		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created Spectate arena at " + player.getLocation().toString());
 	    		SimonLog.logInfo(player.getName() + " Created Spectate arena at " + player.getLocation().toString());
@@ -216,9 +245,24 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			else if(CommandLabel.equalsIgnoreCase("simonleave") || CommandLabel.equalsIgnoreCase("sl"))
 			{
+				String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(player);
+				
+				String RelatedArena = "none";
+				
+				if(UsingMySQL() == true)
+				{
+					RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+				}
+				else
+				{
+					
+				}
+				
+				
 	    		SimonGameArenaManager.getGameManager().removePlayer(player);
-	    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, 1);
+	    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, RelatedArena);
 	    		player.sendMessage(SimonTag + "Successfully left the SimonArena!");
+	    		SimonLog.logSevereError(RelatedArena + "    " + GameArena);
 				return true;
 			}
 		}
@@ -239,9 +283,21 @@ public class SimonSays extends JavaPlugin implements Listener
 			{
 				case SGAME_DONTMOVE:
 				{
+					String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+					String RelatedArena = "";
+					
+					if(UsingMySQL() == true)
+					{
+						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+					}
+					else
+					{
+						
+					}
+					
 					p.sendMessage(SimonTag + "[SGAME_DONTMOVE] Incorrect! Abandoned Game!");
 					SimonGameArenaManager.getGameManager().removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					break;
 				}
 				
@@ -260,9 +316,21 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_FAKEWALK:
 				{
+					String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+					String RelatedArena = "";
+					
+					if(UsingMySQL() == true)
+					{
+						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+					}
+					else
+					{
+						
+					}
+					
 					p.sendMessage(SimonTag + "[SGAME_FAKEWALK] Incorrect! Abandoned Game!");
 					SimonGameArenaManager.getGameManager().removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					break;
 				}
 				
@@ -295,9 +363,21 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(block.getType() == Material.AIR)
 						{
+							String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+							String RelatedArena = "";
+							
+							if(UsingMySQL() == true)
+							{
+								RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+							}
+							else
+							{
+								
+							}
+							
 							p.sendMessage(SimonTag + "[SGAME_FAKEJUMP] Incorrect! Abandoned Game!");
 							SimonGameArenaManager.getGameManager().removePlayer(p);
-							SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+							SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 						}
 					}
 				}
@@ -332,9 +412,21 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_FAKESNEAK:
 				{
+					String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+					String RelatedArena = "";
+					
+					if(UsingMySQL() == true)
+					{
+						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+					}
+					else
+					{
+						
+					}
+					
 					p.sendMessage(SimonTag + "[SGAME_FAKESNEAK] Incorrect! Abandoned Game!");
 					SimonGameArenaManager.getGameManager().removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 				}
 			
 			}
@@ -370,9 +462,21 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_FAKESPRINT:
 				{
+					String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+					String RelatedArena = "";
+					
+					if(UsingMySQL() == true)
+					{
+						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+					}
+					else
+					{
+						
+					}
+					
 					p.sendMessage(SimonTag + "[SGAME_FAKESPRINT] Incorrect! Abandoned Game!");
 					SimonGameArenaManager.getGameManager().removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 				}
 			
 			}
@@ -437,9 +541,21 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 					case SGAME_FAKEPUNCHBLOCK:
 					{
+						String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+						String RelatedArena = "";
+						
+						if(UsingMySQL() == true)
+						{
+							RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						}
+						else
+						{
+							
+						}
+						
 						p.sendMessage(SimonTag + "[SGAME_FAKEPUNCHBLOCK] Incorrect! Abandoned Game!");
 						SimonGameArenaManager.getGameManager().removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					}
 				}
 			}
@@ -476,9 +592,21 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					case SGAME_FAKEATTACKPLAYER:
 					{
+						String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
+						String RelatedArena = "";
+						
+						if(UsingMySQL() == true)
+						{
+							RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						}
+						else
+						{
+							
+						}
+						
 						p.sendMessage(SimonTag + "[SGAME_FAKEATTACKPLAYER] Incorrect! Abandoned Game!");
 						SimonGameArenaManager.getGameManager().removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, 1);
+						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					}
 				}
 			}
@@ -527,36 +655,36 @@ public class SimonSays extends JavaPlugin implements Listener
 	
 	public boolean UsingMySQL()
 	{
-		/*
 		String useMySQL = this.getConfig().getString("useMySQL");
 		
 		if(useMySQL.equalsIgnoreCase("true") || useMySQL.equalsIgnoreCase("yes"))
 		{
 			return true;
-		}*/
+		}
 		
-		return true;
+		return false;
 	}
 	
-	public void AddArenaToSQL(String location, String arenaname, String type)
+	public void AddArenaToSQL(String location, String arenaname, String type, String relatedarena)
 	{
 		// types: 0-regular 1-spec
 		
 		if(UsingMySQL() == true)
-		{
+		{	
 			try 
 			{	
 				Connection connection = sql.getConnection();
 				
 				Statement createtables = connection.createStatement();
 				
-				createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "');");
-				SimonLog.logInfo("Successfully executed AddArenaToSQL query!");
+				createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"');");
 			} 
 			catch (SQLException e) 
 			{
 				e.printStackTrace();
 			}
+			
+			SimonLog.logInfo("Successfully executed AddArenaToSQL query!");
 		 }
 	}
 	
@@ -567,7 +695,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		{
 			try 
 			{
-				Connection connection = this.sql.getConnection();
+				Connection connection = sql.getConnection();
 				
 				Statement loadarenas = connection.createStatement();
 				
@@ -580,14 +708,15 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			catch (SQLException e) 
 			{
-				
+				//e.printStackTrace();
+				SimonLog.logSevereError(e.getMessage());
 			}
 		}
 		
 		return "0";
 	}
 	
-	public void loadSQLGameArenas()
+	public void SQLLoadGameArenas()
 	{
 		String arenacount = getSQLGameArenasCount();
 		
@@ -599,7 +728,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 		
 		if(this.UsingMySQL() == true)
-		{
+		{		
 			try 
 			{
 				int id = 1;
@@ -611,7 +740,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						return;
 					}
 					
-					Connection connection = this.sql.getConnection();
+					Connection connection = sql.getConnection();
 					
 					Statement loadarenas = connection.createStatement();
 					
@@ -632,25 +761,57 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(ArenaType.equals("0"))
 					{
-						//TODO: FIX - des.loc not working..
 						GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
 						SimonGameArenaManager.getGameManager().arenas.add(a);
 						SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
-						SimonLog.logSevereError("" + SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation));
 						
-						SimonLog.logWarning(ArenaType + "  " + ArenaName + "  " + ArenaLocation);
+						SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
+					}
+					else if(ArenaType.equals("1"))
+					{
+						SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
+						SimonSpectateArenaManager.getSpecManager().arenas.add(a);
+						SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
 						
-						this.SimonLog.logInfo("Successfully added arena:" + ArenaName + " at" + ArenaLocation);
+						SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
 					}
 					
-					this.SimonLog.logInfo("Successfully executed loadGameArenas query!");
 					id++;
 				}
 			} 
 			catch (SQLException e) 
 			{
+				//e.printStackTrace();
+				SimonLog.logSevereError(e.getMessage());
+			}
+			
+			this.SimonLog.logInfo("Successfully executed loadSQLGameArenas query!");
+		}
+	}
+	
+	public String SQLGetRelatedGameArena(String GameArena)
+	{
+		if(this.UsingMySQL() == true)
+		{		
+			try 
+			{
+				Connection connection = sql.getConnection();
+				
+				Statement loadarenas = connection.createStatement();
+				
+				ResultSet res = loadarenas.executeQuery("SELECT RelatedArena FROM SimonSays_Arenas WHERE ArenaName = '" + GameArena + "';");
+				res.next();
+				
+				String RelatedArena = res.getString("RelatedArena");
+				
+				return RelatedArena;
+			}
+			catch (SQLException e)
+			{
 				e.printStackTrace();
 			}
+		
 		}
+		return "none";
 	}
 }

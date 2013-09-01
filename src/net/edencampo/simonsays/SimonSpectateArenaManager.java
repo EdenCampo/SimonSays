@@ -37,18 +37,20 @@ public class SimonSpectateArenaManager
 	    return a;
 	}
 	 
-	public SpectateArena getArena(int i){
-	    for(SpectateArena a : arenas){
-	        if(a.getId() == i){
+	public SpectateArena getArena(String arenaname){
+	    for(SpectateArena a : arenas)
+	    {
+	        if(a.getName().equals(arenaname))
+	        {
 	            return a;
 	        }
 	    }
 	    return null;
 	}
 	 
-	public void specPlayer(Player p, int i)
+	public void specPlayer(Player p, String arenaname)
 	{
-		SpectateArena a = getArena(i);
+		SpectateArena a = getArena(arenaname);
 	    if(a == null)
 	    {
 	        p.sendMessage(SimonTag + "Invalid arena!");
@@ -60,12 +62,11 @@ public class SimonSpectateArenaManager
 	    p.teleport(a.spawn);
 	}
 
-	public void createArena(Location l)
+	public void createArena(Location l, String arenaname)
 	{
-	   int num = arenaSize + 1;
 	   arenaSize++;
 	 
-	   SpectateArena a = new SpectateArena(l, num);
+	   SpectateArena a = new SpectateArena(l, arenaname);
 	   arenas.add(a);
 	   
 	   /*
@@ -77,7 +78,7 @@ public class SimonSpectateArenaManager
 	   */
 	}
 	
-	public void removeArena(int i)
+	public void removeArena(String arenaname)
 	{
 		/*
 		for(String s : getArena(i).getPlayers())
@@ -91,7 +92,7 @@ public class SimonSpectateArenaManager
 		}
 		*/
 		
-		arenas.remove(getArena(i));
+		arenas.remove(getArena(arenaname));
 		
 		/*
 		List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
