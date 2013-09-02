@@ -1,7 +1,5 @@
 package net.edencampo.simonsays;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -67,6 +65,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	SimonLogger SimonLog = new SimonLogger(this);
 	SimonGameChooser SimonSGC = new SimonGameChooser(this);
 	SimonGameManager SimonSGM = new SimonGameManager(this);
+	SimonArenaConfigManager SimonCFGM = new SimonArenaConfigManager(this);
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
@@ -119,12 +118,18 @@ public class SimonSays extends JavaPlugin implements Listener
 				SimonLog.logSevereError(ChatColor.RED + "WARNING: Arenas will not be saved!");
 			}
 			
-			this.SQLLoadGameArenas();
+			SimonCFGM.SQLLoadGameArenas();
 		}
 		else
 		{
 			SimonLog.logInfo("Using local-config, loading data...");
 			usingLocalConfig = true;
+			
+			SimonCFGM.saveDefaultArenaConfig();
+			SimonCFGM.saveArenaConfig();
+			SimonCFGM.reloadArenaConfig();
+			
+			SimonCFGM.CFGLoadGameArenas();
 		}
 		
 		CheckUpdate();
@@ -145,29 +150,38 @@ public class SimonSays extends JavaPlugin implements Listener
 	}
 	
 	
-	private void CheckUpdate()
+	protected void CheckUpdate()
 	{
-		Updater updater = new Updater(this, "simon-says", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
+		String update = this.getConfig().getString("autoUpdate");
 		
-        Updater.UpdateResult upresult = updater.getResult();
-        
-        switch(upresult)
-        {
-            case SUCCESS:
-            	SimonLog.logInfo("Success: SimonSays will be updated on next reload!");
-                break;
-            case FAIL_DOWNLOAD:
-            	SimonLog.logInfo("Download Failed: The updater found an update, but was unable to download SimonSays");
-                break;
-            case FAIL_DBO:
-            	SimonLog.logInfo("dev.bukkit.org Failed: for some reason, the updater was unable to contact DBO to download the file.");
-                break;
-            case FAIL_NOVERSION:
-            	SimonLog.logInfo("No version found: When running the version check, the file on DBO did not contain the a version in the format 'vVersion' such as 'v1.0'.");
-                break;
-            case FAIL_BADSLUG:
-            	SimonLog.logInfo("Bad slug: The slug provided by SimonSays is invalid and doesn't exist on DBO.");
-        }
+		if(update.equalsIgnoreCase("true") || update.equalsIgnoreCase("yes"))
+		{
+			Updater updater = new Updater(this, "simon-says", this.getFile(), Updater.UpdateType.DEFAULT, true);
+			
+	        Updater.UpdateResult upresult = updater.getResult();
+	        
+	        switch(upresult)
+	        {
+	            case SUCCESS:
+	            	SimonLog.logInfo("Success: SimonSays will be updated on next reload!");
+	                break;
+	            case FAIL_DOWNLOAD:
+	            	SimonLog.logInfo("Download Failed: The updater found an update, but was unable to download SimonSays");
+	                break;
+	            case FAIL_DBO:
+	            	SimonLog.logInfo("dev.bukkit.org Failed: for some reason, the updater was unable to contact DBO to download the file.");
+	                break;
+	            case FAIL_NOVERSION:
+	            	SimonLog.logInfo("No version found: When running the version check, the file on DBO did not contain the a version in the format 'vVersion' such as 'v1.0'.");
+	                break;
+	            case FAIL_BADSLUG:
+	            	SimonLog.logInfo("Bad slug: The slug provided by SimonSays is invalid and doesn't exist on DBO.");
+	        }
+		}
+		else
+		{
+			SimonLog.logInfo("Disabled update-checking...");
+		}
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String CommandLabel, String[] args) 
@@ -196,11 +210,13 @@ public class SimonSays extends JavaPlugin implements Listener
 		  		
 		  		if(UsingMySQL() == true)
 		  		{
-		  			AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
+		  			SimonCFGM.AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
 		  		}
 		  		else
 		  		{
-		  			
+		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0");
+		  			SimonCFGM.saveArenaConfig();
+		  			SimonCFGM.reloadArenaConfig();
 		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created " + arenaname + " at" + player.getLocation().toString());
@@ -222,11 +238,11 @@ public class SimonSays extends JavaPlugin implements Listener
 		  		
 		  		if(UsingMySQL() == true)
 		  		{
-		  			AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
+		  			SimonCFGM.AddArenaToSQL(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
 		  		}
 		  		else
 		  		{
-		  			
+		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1");
 		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created Spectator arena at " + player.getLocation().toString());
@@ -245,7 +261,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				if(UsingMySQL() == true)
 				{
-					SQLRemoveArena(arenaname);
+					SimonCFGM.SQLRemoveArena(arenaname);
 				}
 				else
 				{
@@ -285,7 +301,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				if(UsingMySQL() == true)
 				{
-					RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+					RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 				}
 				else
 				{
@@ -322,7 +338,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(UsingMySQL() == true)
 					{
-						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 					}
 					else
 					{
@@ -355,7 +371,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(UsingMySQL() == true)
 					{
-						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 					}
 					else
 					{
@@ -402,7 +418,7 @@ public class SimonSays extends JavaPlugin implements Listener
 							
 							if(UsingMySQL() == true)
 							{
-								RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+								RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 							}
 							else
 							{
@@ -451,7 +467,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(UsingMySQL() == true)
 					{
-						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 					}
 					else
 					{
@@ -501,7 +517,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(UsingMySQL() == true)
 					{
-						RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 					}
 					else
 					{
@@ -580,7 +596,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(UsingMySQL() == true)
 						{
-							RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 						}
 						else
 						{
@@ -631,7 +647,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(UsingMySQL() == true)
 						{
-							RelatedArena = this.SQLGetRelatedGameArena(GameArena);
+							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 						}
 						else
 						{
@@ -697,176 +713,5 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 		
 		return false;
-	}
-	
-	public void AddArenaToSQL(String location, String arenaname, String type, String relatedarena)
-	{
-		// types: 0-regular 1-spec
-		
-		if(UsingMySQL() == true)
-		{	
-			try 
-			{	
-				Connection connection = sql.getConnection();
-				
-				Statement createtables = connection.createStatement();
-				
-				createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"');");
-			} 
-			catch (SQLException e) 
-			{
-				SimonLog.logSevereError(ChatColor.RED + "WARNING: Executing query: INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"'); FAILED. Arena not added!");
-				e.printStackTrace();
-			}
-			
-			SimonLog.logInfo("Successfully executed AddArenaToSQL query!");
-		 }
-	}
-	
-	
-	public String getSQLGameArenasCount()
-	{
-		if(this.UsingMySQL() == true)
-		{
-			try 
-			{
-				Connection connection = sql.getConnection();
-				
-				Statement loadarenas = connection.createStatement();
-				
-				ResultSet res = loadarenas.executeQuery("SELECT ArenaID FROM SimonSays_Arenas;");
-				res.last();
-				
-				String arenacount = res.getString("ArenaID");
-				
-				return arenacount+1;
-			}
-			catch (SQLException e) 
-			{
-				//e.printStackTrace();
-				SimonLog.logSevereError(e.getMessage());
-			}
-		}
-		
-		return "0";
-	}
-	
-	public void SQLLoadGameArenas()
-	{
-		String arenacount = getSQLGameArenasCount();
-		
-		int arenas = Integer.parseInt(arenacount);
-		
-		if(arenas == 0)
-		{
-			return;
-		}
-		
-		if(this.UsingMySQL() == true)
-		{		
-			try 
-			{
-				int id = 1;
-				while(id < arenas)
-				{
-					if(id == 0)
-					{
-						id++;
-						return;
-					}
-					
-					Connection connection = sql.getConnection();
-					
-					Statement loadarenas = connection.createStatement();
-					
-					ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res.next();
-					
-					String ArenaType = res.getString("ArenaType");
-					
-					ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res1.next();
-					
-					String ArenaName = res1.getString("ArenaName");
-					
-					ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res2.next();
-			
-					String ArenaLocation = res2.getString("ArenaLocation");
-					
-					if(ArenaType.equals("0"))
-					{
-						GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
-						SimonGameArenaManager.getGameManager().arenas.add(a);
-						SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
-						
-						SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
-					}
-					else if(ArenaType.equals("1"))
-					{
-						SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
-						SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-						SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
-						
-						SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
-					}
-					
-					id++;
-				}
-			} 
-			catch (SQLException e) 
-			{
-				//e.printStackTrace();
-				SimonLog.logSevereError(e.getMessage());
-			}
-			
-			this.SimonLog.logInfo("Successfully executed loadSQLGameArenas query!");
-		}
-	}
-	
-	public String SQLGetRelatedGameArena(String GameArena)
-	{
-		if(this.UsingMySQL() == true)
-		{		
-			try 
-			{
-				Connection connection = sql.getConnection();
-				
-				Statement loadarenas = connection.createStatement();
-				
-				ResultSet res = loadarenas.executeQuery("SELECT RelatedArena FROM SimonSays_Arenas WHERE ArenaName = '" + GameArena + "';");
-				res.next();
-				
-				String RelatedArena = res.getString("RelatedArena");
-				
-				return RelatedArena;
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		
-		}
-		return "none";
-	}
-	
-	public void SQLRemoveArena(String Arena)
-	{
-		if(this.UsingMySQL() == true)
-		{
-			try 
-			{
-				Connection connection = sql.getConnection();
-				
-				Statement deletearena = connection.createStatement();
-				
-				deletearena.executeUpdate("DELETE FROM EventHandler_GrandWinners WHERE ArenaName = '" + Arena + "';");
-				SimonLog.logInfo("Successfully removed arena: " + Arena);
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		}
 	}
 }

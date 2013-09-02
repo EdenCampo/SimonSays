@@ -104,7 +104,7 @@ public class SimonGameArenaManager
 	   
 	   if(a.getPlayers().size() == 0)
 	   {
-		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " is the Winner!");
+		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " is the wins!");
 	   }
 	   
 	   //p.teleport(locs.get(p.getName()));

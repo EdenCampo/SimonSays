@@ -15,7 +15,7 @@ commands:
       usage: /<command>
   simonjoin:
       description: SimonSays Join Arena
-      usage: /<command> <ArenaID>
+      usage: /<command> <ArenaName>
   simonleave:
       description: SimonSays Leave Arena
       usage: /<command> 
