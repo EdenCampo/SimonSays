@@ -2,8 +2,6 @@ package net.edencampo.simonsays;
 
 import net.edencampo.simonsays.SimonSays.SimonGame;
 
-import org.bukkit.plugin.PluginDescriptionFile;
-
 public class SimonLogger 
 {
 	SimonSays plugin;
@@ -15,26 +13,22 @@ public class SimonLogger
 	
 	public void logSevereError(String msg)
 	{
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().severe(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().severe(msg);
 	}
 	
 	public void logWarning(String msg)
 	{
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().warning(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().warning(msg);
 	}
 	
 	public void logInfo(String msg)
 	{	
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().info(pdFile.getName() + " " + pdFile.getVersion() + ": " + msg);
+		plugin.getLogger().info(msg);
 	}
 
 	public void logEnum(SimonGame result)
 	{
-		PluginDescriptionFile pdFile = plugin.getDescription();
-		plugin.getLogger().info(pdFile.getName() + " " + pdFile.getVersion() + ": " + result);
+		plugin.getLogger().info("" + result);
 		
 	}
 }

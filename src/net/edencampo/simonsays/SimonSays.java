@@ -116,6 +116,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			catch (SQLException e) 
 			{
 				e.printStackTrace();
+				SimonLog.logSevereError(ChatColor.RED + "WARNING: Arenas will not be saved!");
 			}
 			
 			this.SQLLoadGameArenas();
@@ -182,6 +183,12 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
 			{
+				if(args.length != 2)
+				{
+					player.sendMessage(SimonTag + "Usage: /creategamearena <ArenaName> <RelatedArena>");
+					return true;
+				}
+				
 				String arenaname = args[0];
 				String relatedarena = args[1];
 				
@@ -203,6 +210,12 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("createspecarena"))
 			{
+				if(args.length != 1)
+				{
+					player.sendMessage(SimonTag + "Usage: /createspecarena <ArenaName>");
+					return true;
+				}
+				
 				String arenaname = args[0];
 				
 		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation(), arenaname);
@@ -216,15 +229,36 @@ public class SimonSays extends JavaPlugin implements Listener
 		  			
 		  		}
 		  		
-	    		player.sendMessage(SimonTag + "Created Spectate arena at " + player.getLocation().toString());
-	    		SimonLog.logInfo(player.getName() + " Created Spectate arena at " + player.getLocation().toString());
+	    		player.sendMessage(SimonTag + "Created Spectator arena at " + player.getLocation().toString());
+	    		SimonLog.logInfo(player.getName() + " Created Spectator arena at " + player.getLocation().toString());
+				return true;
+			}
+			else if(cmd.getName().equalsIgnoreCase("deletearena"))
+			{
+				if(args.length != 1)
+				{
+					player.sendMessage(SimonTag + "Usage: /deletearena <ArenaName>");
+					return true;
+				}
+				
+				String arenaname = args[0];
+				
+				if(UsingMySQL() == true)
+				{
+					SQLRemoveArena(arenaname);
+				}
+				else
+				{
+					
+				}
+				
 				return true;
 			}
 			else if(cmd.getName().equalsIgnoreCase("simonjoin") || CommandLabel.equalsIgnoreCase("sj"))
 			{
 				if(args.length != 1)
 				{
-					player.sendMessage(SimonTag + "Usage: /simonjoin <#ArenaID>");
+					player.sendMessage(SimonTag + "Usage: /simonjoin <ArenaName>");
 					return true;
 				}
 				
@@ -681,6 +715,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			} 
 			catch (SQLException e) 
 			{
+				SimonLog.logSevereError(ChatColor.RED + "WARNING: Executing query: INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"'); FAILED. Arena not added!");
 				e.printStackTrace();
 			}
 			
@@ -813,5 +848,25 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		}
 		return "none";
+	}
+	
+	public void SQLRemoveArena(String Arena)
+	{
+		if(this.UsingMySQL() == true)
+		{
+			try 
+			{
+				Connection connection = sql.getConnection();
+				
+				Statement deletearena = connection.createStatement();
+				
+				deletearena.executeUpdate("DELETE FROM EventHandler_GrandWinners WHERE ArenaName = '" + Arena + "';");
+				SimonLog.logInfo("Successfully removed arena: " + Arena);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 }
