@@ -13,11 +13,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class SimonArenaConfigManager
+public class SimonArenaLoader
 {
 	SimonSays plugin;
 	
-	public SimonArenaConfigManager(SimonSays instance)
+	public SimonArenaLoader(SimonSays instance)
 	{
 		plugin = instance;
 	}
@@ -243,7 +243,7 @@ public class SimonArenaConfigManager
 				
 				Statement deletearena = connection.createStatement();
 				
-				deletearena.executeUpdate("DELETE FROM EventHandler_GrandWinners WHERE ArenaName = '" + Arena + "';");
+				deletearena.executeUpdate("DELETE FROM SimonSays_Arenas WHERE ArenaName = '" + Arena + "';");
 				plugin.SimonLog.logInfo("Successfully removed arena: " + Arena);
 			}
 			catch (SQLException e)
@@ -328,7 +328,7 @@ public class SimonArenaConfigManager
 		{
 			plugin.SimonCFGM.getArenaConfig().set("ArenaNames", ArenaNames + " | " + arenaname);
 			plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", ArenaLocs + " | " + location);
-			plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", ArenaTypes + " | " + location);	
+			plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", ArenaTypes + " | " + type);	
 		}
 		else
 		{
@@ -337,6 +337,102 @@ public class SimonArenaConfigManager
 			plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", type);	
 		}
 		
+		plugin.SimonCFGM.saveArenaConfig();
+		plugin.SimonCFGM.reloadArenaConfig();
+		
 		plugin.SimonLog.logInfo("Successfully added cfg arena!");
+	}
+	
+	public void CFGRemoveArena(String GameArena)
+	{
+		String ArenaNames = plugin.SimonCFGM.getArenaConfig().getString("ArenaNames");
+		String ArenaLocs = plugin.SimonCFGM.getArenaConfig().getString("ArenaLocations");
+		String ArenaTypes = plugin.SimonCFGM.getArenaConfig().getString("ArenaTypes");
+		
+		if(ArenaNames == null || ArenaLocs == null || ArenaTypes == null)
+		{
+			plugin.SimonLog.logWarning("Attempted to delete an arena from an empty cfg! Canceled!");
+		}
+		else
+		{
+			String[] Names = ArenaNames.split(" | ");
+			String[] Locs = ArenaLocs.split(" | ");
+			String[] Types = ArenaTypes.split(" | ");
+			
+			int id = 0;
+			int correctid = 0;
+			while(id < Names.length)
+			{	
+				plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
+				
+				if(!ArenaNames.contains(GameArena))
+				{
+					plugin.SimonLog.logWarning("Attempted to delete an non-existing arena! Canceled!");
+					return;
+				}
+				
+				if(ArenaNames.contains(GameArena))
+				{
+					correctid = id+1;
+					
+					plugin.SimonLog.logInfo("Deleting " + Names[correctid]);
+					plugin.SimonLog.logInfo("Deleting " + Locs[correctid]);
+					plugin.SimonLog.logInfo("Deleting " + Types[correctid]);
+					
+					plugin.SimonLog.logInfo("Found split id = " + correctid);
+					break;
+				}
+				
+				id++;
+			}
+			
+			id = -1;
+			while(id < correctid)
+			{
+				if(correctid == 0 && id == 0)
+				{
+					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", "");
+					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", "");
+					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", "");
+					
+					plugin.SimonLog.logInfo("Found only single arena(ID = " + id + ")");
+					break;
+				}
+				
+				plugin.SimonLog.logInfo("Looping until " + correctid + " Current ID = " + id);
+				
+				if(id == correctid)
+				{
+					plugin.SimonLog.logInfo("Skipping " + Names[id]);
+					plugin.SimonLog.logInfo("Skipping " + Locs[id]);
+					plugin.SimonLog.logInfo("Skipping " + Types[id]);
+					
+					id++;
+					continue;
+				}
+				
+				if(id == -1)
+				{
+					plugin.SimonLog.logInfo("Skipping loop for ID -1");
+					id++;
+					continue;
+				}
+				
+				plugin.SimonCFGM.getArenaConfig().set("ArenaNames", Names[id]);
+				plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", Locs[id]);
+				plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", Types[id]);
+				
+				plugin.SimonLog.logInfo("Writing " + Names[id]);
+				plugin.SimonLog.logInfo("Writing " + Locs[id]);
+				plugin.SimonLog.logInfo("Writing " + Types[id]);
+				
+				id++;
+			}
+			
+			plugin.SimonCFGM.saveArenaConfig();
+			plugin.SimonCFGM.reloadArenaConfig();
+			
+			plugin.SimonCFGM.CFGLoadGameArenas();
+		}
 	}
 }

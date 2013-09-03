@@ -65,7 +65,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	SimonLogger SimonLog = new SimonLogger(this);
 	SimonGameChooser SimonSGC = new SimonGameChooser(this);
 	SimonGameManager SimonSGM = new SimonGameManager(this);
-	SimonArenaConfigManager SimonCFGM = new SimonArenaConfigManager(this);
+	SimonArenaLoader SimonCFGM = new SimonArenaLoader(this);
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
@@ -262,10 +262,30 @@ public class SimonSays extends JavaPlugin implements Listener
 				if(UsingMySQL() == true)
 				{
 					SimonCFGM.SQLRemoveArena(arenaname);
+					player.sendMessage("Successfully removed arena: " + arenaname);
 				}
 				else
 				{
+					if(arenaname.equalsIgnoreCase("clearall") || arenaname.equalsIgnoreCase("all") || arenaname.equalsIgnoreCase("deleteall"))
+					{
+						SimonCFGM.getArenaConfig().set("ArenaNames", "");
+						SimonCFGM.getArenaConfig().set("ArenaLocations", "");
+						SimonCFGM.getArenaConfig().set("ArenaTypes", "");
 					
+						SimonCFGM.saveArenaConfig();
+						SimonCFGM.reloadArenaConfig();
+						
+						SimonCFGM.CFGLoadGameArenas();
+						
+						SimonLog.logInfo(player.getName() + " cleared all arenas!");
+						
+						player.sendMessage("Successfully removed all arenas!");
+					}
+					else
+					{
+						SimonCFGM.CFGRemoveArena(arenaname);
+						player.sendMessage("Successfully removed arena: " + arenaname);
+					}
 				}
 				
 				return true;

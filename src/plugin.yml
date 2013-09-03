@@ -1,6 +1,6 @@
 name: SimonSays
 main: net.edencampo.simonsays.SimonSays
-version: 1.0.0
+version: 1.0.1
 author: Eden.Campo
 
 commands:
@@ -13,6 +13,9 @@ commands:
   createspecarena:
       description: SimonSays Create Spectate Arena
       usage: /<command>
+  deletearena:
+      description: SimonSays Delete Arena
+      usage: /<command> <ArenaName>
   simonjoin:
       description: SimonSays Join Arena
       usage: /<command> <ArenaName>

@@ -104,11 +104,8 @@ public class SimonGameArenaManager
 	   
 	   if(a.getPlayers().size() == 0)
 	   {
-		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " is the wins!");
+		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " wins!");
 	   }
-	   
-	   //p.teleport(locs.get(p.getName()));
-	   //locs.remove(p.getName());	
 	}
 
 	public void createArena(Location loc, String arenaname)
@@ -117,38 +114,11 @@ public class SimonGameArenaManager
 		
 	   GameArena a = new GameArena(loc, arenaname);
 	   arenas.add(a);
-	   
-	   /*
-	   plugin.getConfig().set("Arenas" + num, serializeLoc(l));
-	   List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
-	   list.add(num);
-	   plugin.getConfig().set("Arenas.Arenas", list);
-	   plugin.saveConfig();
-	   */
 	}
 	
 	public void removeArena(String arenaname)
-	{
-		/*
-		for(String s : getArena(i).getPlayers())
-		{
-			Player p = Bukkit.getPlayerExact(s);
-			if(p != null)
-			{
-				p.teleport(locs.get(p.getName()));
-				locs.remove(p.getName());
-			}
-		}
-		*/
-		
+	{	
 		arenas.remove(getArena(arenaname));
-		
-		/*
-		List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
-		list.remove(i);
-		plugin.getConfig().set("Arenas.Arenas", list);
-		plugin.saveConfig();
-		*/
 	}
 	
 	public boolean IsPlaying(Player p)
@@ -198,23 +168,6 @@ public class SimonGameArenaManager
 		return "none";
 	}
 	
-	
-	/*
-	public void loadGameArenas()
-	{
-		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
-		{
-			return;
-		}
-		
-		for(int i : plugin.getConfig().getIntegerList("Arenas.Arenas"))
-		{
-			GameArena a = new GameArena(deserializeLoc(plugin.getConfig().getString("Arenas" + i)), i);
-			arenas.add(a);
-		}
-	}
-	*/
-	
 	public String serializeLoc(Location l)
 	{
 		return l.getWorld().getName()+","+l.getBlockX()+","+l.getBlockY()+","+l.getBlockZ();
@@ -223,7 +176,6 @@ public class SimonGameArenaManager
 	public Location deserializeLoc(String s)
 	{
 		String[] st = s.split(",");
-		//return new Location(Bukkit.getWorld(st[1]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
 		return new Location(Bukkit.getServer().getWorld(st[0]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
 	}
 }	
