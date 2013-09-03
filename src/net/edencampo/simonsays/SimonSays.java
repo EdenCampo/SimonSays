@@ -197,6 +197,12 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
 			{
+				if(!player.hasPermission("SimonSays.create"))
+				{
+					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					return true;
+				}
+				
 				if(args.length != 2)
 				{
 					player.sendMessage(SimonTag + "Usage: /creategamearena <ArenaName> <RelatedArena>");
@@ -225,7 +231,13 @@ public class SimonSays extends JavaPlugin implements Listener
 				return true;
 			}
 			else if(cmd.getName().equalsIgnoreCase("createspecarena"))
-			{
+			{	
+				if(!player.hasPermission("SimonSays.create"))
+				{
+					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					return true;
+				}
+				
 				if(args.length != 1)
 				{
 					player.sendMessage(SimonTag + "Usage: /createspecarena <ArenaName>");
@@ -251,6 +263,13 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("deletearena"))
 			{
+				if(!player.hasPermission("SimonSays.delete"))
+				{
+					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					return true;
+				}
+				
+				
 				if(args.length != 1)
 				{
 					player.sendMessage(SimonTag + "Usage: /deletearena <ArenaName>");
@@ -292,6 +311,12 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("simonjoin") || CommandLabel.equalsIgnoreCase("sj"))
 			{
+				if(!player.hasPermission("SimonSays.join"))
+				{
+					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					return true;
+				}
+				
 				if(args.length != 1)
 				{
 					player.sendMessage(SimonTag + "Usage: /simonjoin <ArenaName>");
@@ -315,6 +340,12 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			else if(CommandLabel.equalsIgnoreCase("simonleave") || CommandLabel.equalsIgnoreCase("sl"))
 			{
+				if(!player.hasPermission("SimonSays.leave"))
+				{
+					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					return true;
+				}
+				
 				String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(player);
 				
 				String RelatedArena = "none";
@@ -578,6 +609,12 @@ public class SimonSays extends JavaPlugin implements Listener
 					{
 						if(!SignLine[1].isEmpty())
 						{	
+							if(!p.hasPermission("SimonSays.join"))
+							{
+								p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+								return;
+							}
+							
 				    		if(!SimonGameArenaManager.getGameManager().gameInProgress(SignLine[1]))
 				    		{
 					    		SimonGameArenaManager.getGameManager().addPlayer(p, SignLine[1]);

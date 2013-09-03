@@ -372,8 +372,8 @@ public class SimonArenaLoader
 				}
 				
 				if(ArenaNames.contains(GameArena))
-				{
-					correctid = id+1;
+				{	
+					correctid = id+2;
 					
 					plugin.SimonLog.logInfo("Deleting " + Names[correctid]);
 					plugin.SimonLog.logInfo("Deleting " + Locs[correctid]);
@@ -401,11 +401,19 @@ public class SimonArenaLoader
 				
 				plugin.SimonLog.logInfo("Looping until " + correctid + " Current ID = " + id);
 				
-				if(id == correctid)
+				if(id == correctid-1)
 				{
-					plugin.SimonLog.logInfo("Skipping " + Names[id]);
-					plugin.SimonLog.logInfo("Skipping " + Locs[id]);
-					plugin.SimonLog.logInfo("Skipping " + Types[id]);
+					plugin.SimonLog.logInfo("Skipping " + Names[correctid]);
+					plugin.SimonLog.logInfo("Skipping " + Locs[correctid]);
+					plugin.SimonLog.logInfo("Skipping " + Types[correctid]);
+					
+					String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
+					String NewArenaLocs = ArenaLocs.replace(Locs[correctid], "DELETED");
+					String NewArenaTypes = ArenaTypes.replace(Types[correctid], "DELETED");
+					
+					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", NewArenaNames);
+					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", NewArenaLocs);
+					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", NewArenaTypes);
 					
 					id++;
 					continue;
@@ -417,16 +425,19 @@ public class SimonArenaLoader
 					id++;
 					continue;
 				}
-				
-				plugin.SimonCFGM.getArenaConfig().set("ArenaNames", Names[id]);
-				plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", Locs[id]);
-				plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", Types[id]);
-				
+							
 				plugin.SimonLog.logInfo("Writing " + Names[id]);
 				plugin.SimonLog.logInfo("Writing " + Locs[id]);
 				plugin.SimonLog.logInfo("Writing " + Types[id]);
+			
+				//String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
+				
+				//plugin.SimonCFGM.getArenaConfig().set("ArenaNames", NewArenaNames);
+				//plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", ArenaLocs + Locs[id]);
+				//plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", ArenaTypes + Types[id]);
 				
 				id++;
+				//id = id+2;
 			}
 			
 			plugin.SimonCFGM.saveArenaConfig();

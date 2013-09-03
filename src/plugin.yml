@@ -21,4 +21,30 @@ commands:
       usage: /<command> <ArenaName>
   simonleave:
       description: SimonSays Leave Arena
-      usage: /<command> 
+      usage: /<command>
+      
+      
+permissions:
+    SimonSays.*:
+        description: Gives access everything related to SimonSays
+        children:
+            SimonSays.create: true
+            SimonSays.delete: true
+            SimonSays.join: true
+            SimonSays.leave: true
+            
+    SimonSays.create:
+        description: Gives the ability to create SimonArenas.
+        default: op 
+        
+    SimonSays.delete:
+        description: Gives the ability to delete SimonArenas.
+        default: op 
+        
+    SimonSays.join:
+        description: Gives the ability to join SimonArenas.
+        default: true
+        
+    SimonSays.leave:
+        description: Gives the ability to leave SimonArenas.
+        default: true
