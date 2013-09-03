@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
+import org.bukkit.block.Sign;
 
 public class GameArena
 {
@@ -15,6 +16,7 @@ public class GameArena
 	}
 	
 	String arenaname = "";
+	Sign arenasign = null;
 	Location spawn = null;
 	List<String> players = new ArrayList<String>();
 	
@@ -29,8 +31,28 @@ public class GameArena
 	  return this.arenaname;
 	}
 	
+	public Sign getSign()
+	{
+		return this.arenasign;
+	}
+	
+	public void setSign(Sign sign)
+	{
+		arenasign = sign;
+	}
+	
 	public List<String> getPlayers()
 	{
 	  return this.players;
+	}
+
+	public boolean needsPlayers() 
+	{
+		if(players.size() > 3)
+		{
+			return false;
+		}
+		
+		return true;
 	}
 }

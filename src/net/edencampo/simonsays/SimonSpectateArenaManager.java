@@ -69,54 +69,12 @@ public class SimonSpectateArenaManager
 	   SpectateArena a = new SpectateArena(l, arenaname);
 	   arenas.add(a);
 	   
-	   /*
-	   plugin.getConfig().set("Arenas" + num, serializeLoc(l));
-	   List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
-	   list.add(num);
-	   plugin.getConfig().set("Arenas.Arenas", list);
-	   plugin.saveConfig();
-	   */
 	}
 	
 	public void removeArena(String arenaname)
-	{
-		/*
-		for(String s : getArena(i).getPlayers())
-		{
-			Player p = Bukkit.getPlayerExact(s);
-			if(p != null)
-			{
-				p.teleport(locs.get(p.getName()));
-				locs.remove(p.getName());
-			}
-		}
-		*/
-		
+	{	
 		arenas.remove(getArena(arenaname));
-		
-		/*
-		List<Integer> list = plugin.getConfig().getIntegerList("Arenas.Arenas");
-		list.remove(i);
-		plugin.getConfig().set("Arenas.Arenas", list);
-		plugin.saveConfig();
-		*/
 	}
-	
-	/*
-	public void loadSpecArenas()
-	{
-		if(plugin.getConfig().getIntegerList("Arenas.Arenas").isEmpty())
-		{
-			return;
-		}
-		
-		for(int i : plugin.getConfig().getIntegerList("Arenas.Arenas"))
-		{
-			SpectateArena a = new SpectateArena(deserializeLoc(plugin.getConfig().getString("Arenas" + i)), i);
-			arenas.add(a);
-		}
-	}
-	*/
 	
 	public String serializeLoc(Location l)
 	{

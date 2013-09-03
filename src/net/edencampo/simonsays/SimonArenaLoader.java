@@ -142,70 +142,68 @@ public class SimonArenaLoader
 		
 		if(arenas == 0)
 		{
+			plugin.SimonLog.logInfo("No arenas to load... Skipping!");
 			return;
 		}
 		
-		if(plugin.UsingMySQL() == true)
-		{		
-			try 
+		try 
+		{
+			int id = 1;
+			while(id < arenas)
 			{
-				int id = 1;
-				while(id < arenas)
+				if(id == 0)
 				{
-					if(id == 0)
-					{
-						id++;
-						return;
-					}
-					
-					Connection connection = plugin.sql.getConnection();
-					
-					Statement loadarenas = connection.createStatement();
-					
-					ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res.next();
-					
-					String ArenaType = res.getString("ArenaType");
-					
-					ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res1.next();
-					
-					String ArenaName = res1.getString("ArenaName");
-					
-					ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-					res2.next();
-			
-					String ArenaLocation = res2.getString("ArenaLocation");
-					
-					if(ArenaType.equals("0"))
-					{
-						GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
-						SimonGameArenaManager.getGameManager().arenas.add(a);
-						SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
-						
-						plugin.SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
-					}
-					else if(ArenaType.equals("1"))
-					{
-						SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
-						SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-						SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
-						
-						plugin.SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
-					}
-					
 					id++;
+					continue;
 				}
-			} 
-			catch (SQLException e) 
-			{
-				//e.printStackTrace();
-				plugin.SimonLog.logSevereError(e.getMessage());
-			}
+					
+				Connection connection = plugin.sql.getConnection();
+				
+				Statement loadarenas = connection.createStatement();
+					
+				ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+				res.next();
+					
+				String ArenaType = res.getString("ArenaType");
+					
+				ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+				res1.next();
+					
+				String ArenaName = res1.getString("ArenaName");
+					
+				ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+				res2.next();
 			
-			plugin.SimonLog.logInfo("Successfully executed loadSQLGameArenas query!");
+				String ArenaLocation = res2.getString("ArenaLocation");
+				
+				if(ArenaType.equals("0"))
+				{
+					GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
+					SimonGameArenaManager.getGameManager().arenas.add(a);
+					SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
+						
+					plugin.SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
+				}
+				else if(ArenaType.equals("1"))
+				{
+					SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
+					SimonSpectateArenaManager.getSpecManager().arenas.add(a);
+					SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
+						
+					plugin.SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
+				}
+					
+				id++;
+			}
+		} 
+		catch (SQLException e) 
+		{
+			//e.printStackTrace();
+			plugin.SimonLog.logSevereError(e.getMessage());
 		}
-	}
+			
+		plugin.SimonLog.logInfo("Successfully executed loadSQLGameArenas query!");
+}
 	
 	public String SQLGetRelatedGameArena(String GameArena)
 	{
@@ -363,7 +361,7 @@ public class SimonArenaLoader
 			int correctid = 0;
 			while(id < Names.length)
 			{	
-				plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
+				//plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
 				
 				if(!ArenaNames.contains(GameArena))
 				{
@@ -429,15 +427,8 @@ public class SimonArenaLoader
 				plugin.SimonLog.logInfo("Writing " + Names[id]);
 				plugin.SimonLog.logInfo("Writing " + Locs[id]);
 				plugin.SimonLog.logInfo("Writing " + Types[id]);
-			
-				//String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
-				
-				//plugin.SimonCFGM.getArenaConfig().set("ArenaNames", NewArenaNames);
-				//plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", ArenaLocs + Locs[id]);
-				//plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", ArenaTypes + Types[id]);
 				
 				id++;
-				//id = id+2;
 			}
 			
 			plugin.SimonCFGM.saveArenaConfig();

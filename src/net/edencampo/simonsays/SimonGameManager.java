@@ -1,9 +1,11 @@
 package net.edencampo.simonsays;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 public class SimonGameManager implements Runnable
@@ -12,6 +14,8 @@ public class SimonGameManager implements Runnable
 	
 	List<String> playerscompleted = new ArrayList<String>();
 	List<String> playermesseged = new ArrayList<String>();
+	
+	HashMap<Player, Material> playerblockplace = new HashMap<Player, Material>();
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
@@ -54,7 +58,17 @@ public class SimonGameManager implements Runnable
 		
 		return false;
 	}
+	
+	public void setBlockToPlace(Player p, Material block)
+	{
+		this.playerblockplace.put(p, block);
+	}
 
+	public Material getBlockToPlace(Player p)
+	{
+		return this.playerblockplace.get(p);
+	}
+	
 	@Override
 	public void run() 
 	{

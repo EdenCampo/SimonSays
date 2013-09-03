@@ -137,25 +137,22 @@ public class SimonGameArenaManager
 	    if(a == null)
 	    {
 	    	// Arena not found, return "game in progress" so it wont error.
+	    	//plugin.SimonLog.logWarning("Attempted to join a null arena: " + arenaname);
 	        return true;
 	    }
 		
-		int count = 0;
-		  
-		for(GameArena arena : arenas)
-		{
-			if(arena == a)
-			{
-				count = a.getPlayers().size();
-			}
-		}
-		  
-		if(count > 1)
-		{
-			return true;
-		}
-	
-		return false;
+	    String gamestage = plugin.SimonGSM.arenagamestage.get(SimonGameArenaManager.getGameManager().getArena(arenaname));
+	    
+	    if(gamestage.equals("SGAMESTAGE_WAITINGPLAYERS"))
+	    {
+	    	return false;
+	    }
+	    else if(gamestage.equals("SGAMESTAGE_INPROGRESS"))
+	    {
+	    	return true;
+	    }
+	    
+	    return true;
 	}
 	
 	public String getArenaIn(Player p)
