@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -115,6 +116,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			{
 				Statement createtables = sql.getConnection().createStatement();
 				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, RelatedArena varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
+				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_SignLinks(ArenaConnected varchar(255) NOT NULL, SignLocation varchar(255) NOT NULL, SignID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`SignID`));");
 				SimonLog.logInfo("Successfully executed onEnable() queries!");
 			} 
 			catch (SQLException e) 
@@ -124,6 +126,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			
 			SimonCFGM.SQLLoadGameArenas();
+			SimonSignsM.SQLlinkSignsToArenas();
 		}
 		else
 		{
@@ -234,7 +237,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		  		}
 		  		else
 		  		{
-		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0");
+		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
 		  			SimonCFGM.saveArenaConfig();
 		  			SimonCFGM.reloadArenaConfig();
 		  		}
@@ -271,7 +274,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		  		}
 		  		else
 		  		{
-		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1");
+		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
 		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created Spectator arena at " + player.getLocation().toString());
@@ -410,7 +413,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					}
 					else
 					{
-						
+						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
 					p.sendMessage(SimonTag + "[SGAME_DONTMOVE] Incorrect! Abandoned Game!");
@@ -443,7 +446,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					}
 					else
 					{
-						
+						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
 					p.sendMessage(SimonTag + "[SGAME_FAKEWALK] Incorrect! Abandoned Game!");
@@ -490,7 +493,7 @@ public class SimonSays extends JavaPlugin implements Listener
 							}
 							else
 							{
-								
+								RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 							}
 							
 							p.sendMessage(SimonTag + "[SGAME_FAKEJUMP] Incorrect! Abandoned Game!");
@@ -539,7 +542,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					}
 					else
 					{
-						
+						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
 					p.sendMessage(SimonTag + "[SGAME_FAKESNEAK] Incorrect! Abandoned Game!");
@@ -589,7 +592,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					}
 					else
 					{
-						
+						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
 					p.sendMessage(SimonTag + "[SGAME_FAKESPRINT] Incorrect! Abandoned Game!");
@@ -626,21 +629,28 @@ public class SimonSays extends JavaPlugin implements Listener
 					{
 						if(!SignLine[1].isEmpty())
 						{	
-							if(!p.hasPermission("SimonSays.join"))
+							if(!SignLine[2].contains("Invalid Arena"))
 							{
-								p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
-								return;
+								if(!p.hasPermission("SimonSays.join"))
+								{
+									p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+									return;
+								}
+								
+					    		if(SimonGameArenaManager.getGameManager().getArena(SignLine[1]).needsPlayers())
+					    		{
+						    		SimonGameArenaManager.getGameManager().addPlayer(p, SignLine[1]);
+						    		p.setGameMode(GameMode.SURVIVAL);	
+					    		}
+					    		else
+					    		{
+					    			p.sendMessage(SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
+					    		}
 							}
-							
-				    		if(SimonGameArenaManager.getGameManager().getArena(SignLine[1]).needsPlayers())
-				    		{
-					    		SimonGameArenaManager.getGameManager().addPlayer(p, SignLine[1]);
-					    		p.setGameMode(GameMode.SURVIVAL);	
-				    		}
-				    		else
-				    		{
-				    			p.sendMessage(SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
-				    		}
+							else
+							{
+								p.sendMessage(SimonTag + "Arena join attempt denied. Invalid Arena!");
+							}
 						}
 					}
 				}
@@ -725,7 +735,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						}
 						else
 						{
-							
+							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 						}
 						
 						p.sendMessage(SimonTag + "[SGAME_FAKEATTACKPLAYER] Incorrect! Abandoned Game!");
@@ -774,7 +784,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				if(UsingMySQL() == true)
 				{
-					
+					SimonSignsM.SQLaddSignArena(SignLine[1], SimonGameArenaManager.getGameManager().serializeLoc(e.getBlock().getLocation()));
 				}
 				else
 				{
@@ -829,7 +839,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					}
 					else
 					{
-						
+						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
 					p.sendMessage(SimonTag + "[SGAME_FAKEPLACEBLOCK] Incorrect! Abandoned Game!");
@@ -840,6 +850,39 @@ public class SimonSays extends JavaPlugin implements Listener
 				}
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onSignBreak(BlockBreakEvent e)
+	{
+		Sign arenasign = (Sign) e.getBlock().getState();
+		
+		String[] SignLines = arenasign.getLines();
+		
+		String arenaname = SignLines[1];
+		
+		if(UsingMySQL() == true)
+		{
+			if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
+			{
+				SimonSignsM.SQLremoveSignArena(arenaname);
+				SimonSignsM.SQLlinkSignsToArenas();
+				arenasign.update(false);
+				arenasign.getBlock().breakNaturally();
+				SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
+			}
+		}
+		else
+		{
+			if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
+			{
+				SimonSignsM.CFGremoveSignArena(arenaname);
+				arenasign.update(false);
+				arenasign.getBlock().breakNaturally();
+				SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
+			}
+		}
+		
 	}
 	
 	public int getSimonSGCTask()

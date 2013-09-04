@@ -160,21 +160,49 @@ public class SimonArenaLoader
 				Connection connection = plugin.sql.getConnection();
 				
 				Statement loadarenas = connection.createStatement();
-					
+				
+				String ArenaType = "";
+				String ArenaName = "";
+				String ArenaLocation = "";
+				
 				ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-				res.next();
-					
-				String ArenaType = res.getString("ArenaType");
-					
+				
+				if(res.next())
+				{
+					ArenaType = res.getString("ArenaType");
+					res.close();
+				}
+				else
+				{	
+					id++;
+					continue;
+				}
+				
 				ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-				res1.next();
-					
-				String ArenaName = res1.getString("ArenaName");
+				
+				if(res1.next())
+				{
+					ArenaName = res1.getString("ArenaName");
+					res1.close();
+				}
+				else
+				{	
+					id++;
+					continue;
+				}
 					
 				ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-				res2.next();
-			
-				String ArenaLocation = res2.getString("ArenaLocation");
+				
+				if(res2.next())
+				{
+					ArenaLocation = res2.getString("ArenaLocation");
+					res2.close();
+				}
+				else
+				{	
+					id++;
+					continue;
+				}
 				
 				if(ArenaType.equals("0"))
 				{
@@ -201,8 +229,6 @@ public class SimonArenaLoader
 			//e.printStackTrace();
 			plugin.SimonLog.logSevereError(e.getMessage());
 		}
-			
-		plugin.SimonLog.logInfo("Successfully executed loadSQLGameArenas query!");
 }
 	
 	public String SQLGetRelatedGameArena(String GameArena)
@@ -306,33 +332,61 @@ public class SimonArenaLoader
 		}
 	}
 	
-	@SuppressWarnings("unused")
 	public String CFGGetRelatedArena(String GameArena)
 	{
-		String RelatedArenas = plugin.SimonCFGM.getArenaConfig().getString("RelatedArenas");
+		String ArenaNames = plugin.SimonCFGM.getArenaConfig().getString("ArenaNames");
+		String RelatedArenas = plugin.SimonCFGM.getArenaConfig().getString("RelatedArena");
 		
-		String[] Relateds = RelatedArenas.split(" | ");
+		if(RelatedArenas != null)
+		{
+			String[] Relateds = RelatedArenas.split(" | ");
+			
+			int id = 0;
+			while(id < Relateds.length)
+			{	
+				//plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
+				
+				if(!ArenaNames.contains(GameArena))
+				{
+					plugin.SimonLog.logWarning("Attempted to get an related arena for a non-existing arena! Canceled!");
+					return "none";
+				}
+				
+				if(ArenaNames.contains(GameArena))
+				{	
+					plugin.SimonLog.logInfo("Found related arena " + Relateds[id] + " for arena " + GameArena);
+					
+					return Relateds[id];
+				}
+				
+				id++;
+			}	
+			
+		}
 		
 		return "none";
 	}
 	
-	public void CFGAddArena(String location, String arenaname, String type)
+	public void CFGAddArena(String location, String arenaname, String type, String relatedarena)
 	{
 		String ArenaNames = plugin.SimonCFGM.getArenaConfig().getString("ArenaNames");
 		String ArenaLocs = plugin.SimonCFGM.getArenaConfig().getString("ArenaLocations");
 		String ArenaTypes = plugin.SimonCFGM.getArenaConfig().getString("ArenaTypes");
+		String RelatedArenas = plugin.SimonCFGM.getArenaConfig().getString("RelatedArena");
 		
 		if(ArenaNames != null)
 		{
 			plugin.SimonCFGM.getArenaConfig().set("ArenaNames", ArenaNames + " | " + arenaname);
 			plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", ArenaLocs + " | " + location);
 			plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", ArenaTypes + " | " + type);	
+			plugin.SimonCFGM.getArenaConfig().set("RelatedArena", RelatedArenas + " | " + relatedarena);
 		}
 		else
 		{
 			plugin.SimonCFGM.getArenaConfig().set("ArenaNames", arenaname);
 			plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", location);
 			plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", type);	
+			plugin.SimonCFGM.getArenaConfig().set("RelatedArena", relatedarena);	
 		}
 		
 		plugin.SimonCFGM.saveArenaConfig();
@@ -346,8 +400,9 @@ public class SimonArenaLoader
 		String ArenaNames = plugin.SimonCFGM.getArenaConfig().getString("ArenaNames");
 		String ArenaLocs = plugin.SimonCFGM.getArenaConfig().getString("ArenaLocations");
 		String ArenaTypes = plugin.SimonCFGM.getArenaConfig().getString("ArenaTypes");
+		String RelatedArenas = plugin.SimonCFGM.getArenaConfig().getString("RelatedArena");
 		
-		if(ArenaNames == null || ArenaLocs == null || ArenaTypes == null)
+		if(ArenaNames == null || ArenaLocs == null || ArenaTypes == null || RelatedArenas == null)
 		{
 			plugin.SimonLog.logWarning("Attempted to delete an arena from an empty cfg! Canceled!");
 		}
@@ -356,6 +411,7 @@ public class SimonArenaLoader
 			String[] Names = ArenaNames.split(" | ");
 			String[] Locs = ArenaLocs.split(" | ");
 			String[] Types = ArenaTypes.split(" | ");
+			String[] Relateds = RelatedArenas.split(" | ");
 			
 			int id = 0;
 			int correctid = 0;
@@ -376,6 +432,7 @@ public class SimonArenaLoader
 					plugin.SimonLog.logInfo("Deleting " + Names[correctid]);
 					plugin.SimonLog.logInfo("Deleting " + Locs[correctid]);
 					plugin.SimonLog.logInfo("Deleting " + Types[correctid]);
+					plugin.SimonLog.logInfo("Deleting " + Relateds[correctid]);
 					
 					plugin.SimonLog.logInfo("Found split id = " + correctid);
 					break;
@@ -392,6 +449,7 @@ public class SimonArenaLoader
 					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", "");
 					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", "");
 					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", "");
+					plugin.SimonCFGM.getArenaConfig().set("RelatedArena", "");
 					
 					plugin.SimonLog.logInfo("Found only single arena(ID = " + id + ")");
 					break;
@@ -404,14 +462,17 @@ public class SimonArenaLoader
 					plugin.SimonLog.logInfo("Skipping " + Names[correctid]);
 					plugin.SimonLog.logInfo("Skipping " + Locs[correctid]);
 					plugin.SimonLog.logInfo("Skipping " + Types[correctid]);
+					plugin.SimonLog.logInfo("Skipping " + Relateds[correctid]);
 					
 					String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
 					String NewArenaLocs = ArenaLocs.replace(Locs[correctid], "DELETED");
 					String NewArenaTypes = ArenaTypes.replace(Types[correctid], "DELETED");
+					String NewRelatedArenas = RelatedArenas.replace(Relateds[correctid], "DELETED");
 					
 					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", NewArenaNames);
 					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", NewArenaLocs);
 					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", NewArenaTypes);
+					plugin.SimonCFGM.getArenaConfig().set("RelatedArena", NewRelatedArenas);
 					
 					id++;
 					continue;
@@ -427,6 +488,7 @@ public class SimonArenaLoader
 				plugin.SimonLog.logInfo("Writing " + Names[id]);
 				plugin.SimonLog.logInfo("Writing " + Locs[id]);
 				plugin.SimonLog.logInfo("Writing " + Types[id]);
+				plugin.SimonLog.logInfo("Writing " + Relateds[id]);
 				
 				id++;
 			}

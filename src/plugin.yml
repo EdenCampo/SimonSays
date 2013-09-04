@@ -1,6 +1,6 @@
 name: SimonSays
 main: net.edencampo.simonsays.SimonSays
-version: 1.0.1
+version: 1.0.2
 author: Eden.Campo
 
 commands:
