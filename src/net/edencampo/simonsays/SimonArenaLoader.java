@@ -94,14 +94,13 @@ public class SimonArenaLoader
 				Statement createtables = connection.createStatement();
 				
 				createtables.executeUpdate("INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"');");
+				plugin.SimonLog.logInfo("Success! Added new arena:" + arenaname + " (MySQL) ");
 			} 
 			catch (SQLException e) 
 			{
-				plugin.SimonLog.logSevereError(ChatColor.RED + "WARNING: Executing query: INSERT INTO SimonSays_Arenas (`ArenaName`, `ArenaLocation`, `ArenaType`, `RelatedArena`) VALUES ('" + arenaname + "', '" + location +"', '" + type + "', '" + relatedarena +"'); FAILED. Arena not added!");
+				plugin.SimonLog.logSevereError(ChatColor.RED + "WARNING: Adding new arena: " + arenaname + " FAILED. Arena was not added!");
 				e.printStackTrace();
 			}
-			
-			plugin.SimonLog.logInfo("Successfully executed AddArenaToSQL query!");
 		 }
 	}
 	
@@ -118,16 +117,19 @@ public class SimonArenaLoader
 				Statement loadarenas = connection.createStatement();
 				
 				ResultSet res = loadarenas.executeQuery("SELECT ArenaID FROM SimonSays_Arenas;");
-				res.last();
 				
-				String arenacount = res.getString("ArenaID");
-				
-				return arenacount+1;
+				if(res.last())
+				{
+					String arenacount = res.getString("ArenaID");
+					
+					res.close();
+					
+					return arenacount+1;	
+				}
 			}
 			catch (SQLException e) 
 			{
-				//e.printStackTrace();
-				plugin.SimonLog.logSevereError(e.getMessage());
+				plugin.SimonLog.logSevereError("Failed to get arena-count (MySQL)! Error: " + e.getMessage());
 			}
 		}
 		
@@ -142,7 +144,7 @@ public class SimonArenaLoader
 		
 		if(arenas == 0)
 		{
-			plugin.SimonLog.logInfo("No arenas to load... Skipping!");
+			plugin.SimonLog.logInfo("Can't find arenas to load... Skipping!");
 			return;
 		}
 		
@@ -223,6 +225,8 @@ public class SimonArenaLoader
 					
 				id++;
 			}
+			
+			plugin.SimonLog.logInfo("Finished loading all arenas! (MySQL)");
 		} 
 		catch (SQLException e) 
 		{
@@ -272,7 +276,7 @@ public class SimonArenaLoader
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				plugin.SimonLog.logSevereError("Failed to remove arena " + Arena + " (MySQL)! Error: " + e.getMessage());
 			}
 		}
 	}
@@ -285,7 +289,7 @@ public class SimonArenaLoader
 
 		if(ArenaNames == null)
 		{
-			plugin.SimonLog.logInfo("SavedArenas.yml seems empty.. skipping!");
+			plugin.SimonLog.logInfo("Can't find arenas to load... Skipping!");
 			return;
 		}
 		
@@ -317,7 +321,7 @@ public class SimonArenaLoader
 				SimonGameArenaManager.getGameManager().arenas.add(a);
 				SimonGameArenaManager.getGameManager().getArena(Names[id]).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]);
 				
-				plugin.SimonLog.logInfo("Successfully loaded game arena:" + " " +  Names[id] + " at " + Locations[id] + " " +  "type: GameArena");
+				plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at " + Locations[id] + " " +  "type: 'GameArena'");
 			}
 			else if(Types[id].equals("1"))
 			{
@@ -325,11 +329,13 @@ public class SimonArenaLoader
 				SimonSpectateArenaManager.getSpecManager().arenas.add(a);
 				SimonSpectateArenaManager.getSpecManager().getArena(Names[id]).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]);
 				
-				plugin.SimonLog.logInfo("Successfully loaded spec arena:" + " " +  Names[id] + " at " + Locations[id] + " " +  "type: SpectateArena");
+				plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at '" + Locations[id] + "' " +  "type: 'SpectateArena'");
 			}
 			
 			id++;
 		}
+		
+		plugin.SimonLog.logInfo("Finished loading all arenas! (config)");
 	}
 	
 	public String CFGGetRelatedArena(String GameArena)
@@ -392,7 +398,7 @@ public class SimonArenaLoader
 		plugin.SimonCFGM.saveArenaConfig();
 		plugin.SimonCFGM.reloadArenaConfig();
 		
-		plugin.SimonLog.logInfo("Successfully added cfg arena!");
+		plugin.SimonLog.logInfo("Success! Added new arena:" + arenaname + " (config) ");
 	}
 	
 	public void CFGRemoveArena(String GameArena)
@@ -497,6 +503,8 @@ public class SimonArenaLoader
 			plugin.SimonCFGM.reloadArenaConfig();
 			
 			plugin.SimonCFGM.CFGLoadGameArenas();
+			
+			plugin.SimonLog.logInfo("Deleting proccess finished for arena: " + GameArena);
 		}
 	}
 }

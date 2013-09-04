@@ -67,19 +67,19 @@ public class SimonGameStagesManager implements Listener, Runnable
 
    		if(gamestage.equals("SGAMESTAGE_ERROR"))
    		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "SIGN SHUTDOWN..");
+   			//sign.setLine(3, ChatColor.DARK_AQUA + "SIGN SHUTDOWN..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_WAITINGPLAYERS"))
    		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
+   			//sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_INPROGRESS"))
    		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
+   			//sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_ENDED"))
    		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
+   			//sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
    		}
    				
    		sign.update(true);

@@ -39,10 +39,8 @@ public class SimonSays extends JavaPlugin implements Listener
 {
 	/*
 	 * TODO: ADD: /simonhelp
-	 * TODO: ADD: MySQL Support + Config
-	 * TODO: ADD: Permissions
-	 * TODO: FIX: Config Errors
-	 * TODO: FINISH-POST: BukkitDev.org post
+	 * TODO: ADD: (More)Permissions
+	 * TODO: FIX: All Errors (:
 	 */
 	
 	public enum SimonGame
@@ -143,6 +141,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			SimonCFGM.CFGLoadGameArenas();
 			SimonSignsM.CFGlinkSignsToArenas();
+			
 		}
 		
 		CheckUpdate();
@@ -185,18 +184,18 @@ public class SimonSays extends JavaPlugin implements Listener
 	        switch(upresult)
 	        {
 	            case SUCCESS:
-	            	SimonLog.logInfo("[UPDATE_STATUS] SimonSays will be updated on next reload!");
+	            	SimonLog.logInfo("SimonSays will be updated on next reload!");
 	                break;
 	            case FAIL_DOWNLOAD:
-	            	SimonLog.logInfo("[UPDATE_STATUS] Download Failed: The updater found an update, but was unable to download SimonSays");
+	            	SimonLog.logInfo("Download Failed: The auto-updater found an update, but was unable to download SimonSays.");
 	                break;
 	            case FAIL_DBO:
-	            	SimonLog.logInfo("[UPDATE_STATUS] dev.bukkit.org Failed: for some reason, the updater was unable to contact DBO to download the file.");
+	            	SimonLog.logInfo("dev.bukkit.org Failed: for some reason, the updater was unable to contact DBO to download the file.");
 	        }
 		}
 		else
 		{
-			SimonLog.logInfo("Disabled update-checking...");
+			SimonLog.logInfo("Skipped update-checking...");
 		}
 	}
 	
@@ -242,9 +241,9 @@ public class SimonSays extends JavaPlugin implements Listener
 		  			SimonCFGM.reloadArenaConfig();
 		  		}
 		  		
-	    		player.sendMessage(SimonTag + "Created " + arenaname + " at" + player.getLocation().toString());
+	    		player.sendMessage(SimonTag + "Created " + arenaname + " at your location");
 	    		
-	    		SimonLog.logInfo(player.getName() + " Created game arena " + arenaname + "at " + player.getLocation().toString());
+	    		SimonLog.logInfo(player.getName() + " Created game arena " + arenaname);
 	    		
 	    		this.SimonGSM.arenagamestage.put(SimonGameArenaManager.getGameManager().getArena(arenaname), "SGAMESTAGE_WAITINGPLAYERS");
 				return true;
@@ -277,8 +276,8 @@ public class SimonSays extends JavaPlugin implements Listener
 		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
 		  		}
 		  		
-	    		player.sendMessage(SimonTag + "Created Spectator arena at " + player.getLocation().toString());
-	    		SimonLog.logInfo(player.getName() + " Created Spectator arena at " + player.getLocation().toString());
+	    		player.sendMessage(SimonTag + "Created spectator arena " + arenaname + " ar your location");
+	    		SimonLog.logInfo(player.getName() + " Created spectator arena " + arenaname);
 				return true;
 			}
 			else if(cmd.getName().equalsIgnoreCase("deletearena"))
@@ -318,12 +317,12 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						SimonLog.logInfo(player.getName() + " cleared all arenas!");
 						
-						player.sendMessage("Successfully removed all arenas!");
+						player.sendMessage(SimonTag + "Successfully removed all arenas!");
 					}
 					else
 					{
 						SimonCFGM.CFGRemoveArena(arenaname);
-						player.sendMessage("Successfully removed arena: " + arenaname);
+						player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
 					}
 				}
 				
@@ -376,7 +375,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				}
 				else
 				{
-					
+					RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 				}
 				
 				
@@ -684,7 +683,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						}
 						else
 						{
-							
+							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 						}
 						
 						p.sendMessage(SimonTag + "[SGAME_FAKEPUNCHBLOCK] Incorrect! Abandoned Game!");
@@ -855,34 +854,41 @@ public class SimonSays extends JavaPlugin implements Listener
 	@EventHandler
 	public void onSignBreak(BlockBreakEvent e)
 	{
-		Sign arenasign = (Sign) e.getBlock().getState();
-		
-		String[] SignLines = arenasign.getLines();
-		
-		String arenaname = SignLines[1];
-		
-		if(UsingMySQL() == true)
+		if(e.getBlock().getState() instanceof Sign)
 		{
-			if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
+			Sign arenasign = (Sign) e.getBlock().getState();
+			
+			String[] SignLines = arenasign.getLines();
+			
+			String SimonTag = SignLines[0];
+			String arenaname = SignLines[1];
+			
+			if(SimonTag.contains("[SimonSays]"))
 			{
-				SimonSignsM.SQLremoveSignArena(arenaname);
-				SimonSignsM.SQLlinkSignsToArenas();
-				arenasign.update(false);
-				arenasign.getBlock().breakNaturally();
+				if(UsingMySQL() == true)
+				{
+					if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
+					{
+						SimonSignsM.SQLremoveSignArena(arenaname);
+						SimonSignsM.SQLlinkSignsToArenas();
+						arenasign.update(false);
+						arenasign.getBlock().breakNaturally();
+					}
+				}
+				else
+				{
+					if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
+					{
+						SimonSignsM.CFGremoveSignArena(arenaname);
+						SimonSignsM.CFGlinkSignsToArenas();
+						arenasign.update(false);
+						arenasign.getBlock().breakNaturally();
+					}
+				}
+				
 				SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
 			}
 		}
-		else
-		{
-			if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
-			{
-				SimonSignsM.CFGremoveSignArena(arenaname);
-				arenasign.update(false);
-				arenasign.getBlock().breakNaturally();
-				SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
-			}
-		}
-		
 	}
 	
 	public int getSimonSGCTask()

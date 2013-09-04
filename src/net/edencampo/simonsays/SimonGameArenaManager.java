@@ -175,4 +175,10 @@ public class SimonGameArenaManager
 		String[] st = s.split(",");
 		return new Location(Bukkit.getServer().getWorld(st[0]), Integer.parseInt(st[1]), Integer.parseInt(st[2]), Integer.parseInt(st[3]));
 	}
+	
+	public String getLocWorld(String s)
+	{
+		String[] st = s.split(",");
+		return Bukkit.getServer().getWorld(st[0]).getName();
+	}
 }	
