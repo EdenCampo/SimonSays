@@ -1,7 +1,15 @@
 package net.edencampo.simonsays;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import net.edencampo.simonsays.Dataloaders.SimonArenaLoader;
+import net.edencampo.simonsays.Dataloaders.SimonSignsLoader;
+import net.edencampo.simonsays.utils.Metrics;
+import net.edencampo.simonsays.utils.MySQL;
+import net.edencampo.simonsays.utils.Updater;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,6 +35,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -36,13 +45,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 
 public class SimonSays extends JavaPlugin implements Listener
-{
-	/*
-	 * TODO: ADD: /simonhelp
-	 * TODO: ADD: (More)Permissions
-	 * TODO: FIX: All Errors (:
-	 */
-	
+{	
 	public enum SimonGame
 	{
 		SGAME_NONE,
@@ -64,25 +67,16 @@ public class SimonSays extends JavaPlugin implements Listener
 		SGAME_FAKEPLACEBLOCK
 	}
 	
-	SimonLogger SimonLog = new SimonLogger(this);
-	SimonGameChooser SimonSGC = new SimonGameChooser(this);
-	SimonGameManager SimonSGM = new SimonGameManager(this);
-	SimonArenaLoader SimonCFGM = new SimonArenaLoader(this);
-	SimonSignsLoader SimonSignsM = new SimonSignsLoader(this);
-	SimonGameStagesManager SimonGSM = new SimonGameStagesManager(this);
+	public SimonLogger SimonLog = new SimonLogger(this);
+	public SimonGameChooser SimonSGC = new SimonGameChooser(this);
+	public SimonGameManager SimonSGM = new SimonGameManager(this);
+	public SimonArenaLoader SimonCFGM = new SimonArenaLoader(this);
+	public SimonSignsLoader SimonSignsM = new SimonSignsLoader(this);
+	public SimonGameStagesManager SimonGSM = new SimonGameStagesManager(this);
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
-	MySQL sql;
-	
-	/*
-	 * # MySQL Details
-		host: NULL
-		port: NULL
-		database: NULL
-		user: NULL
-		password: NULL
-	*/
+	public MySQL sql;
 	
 	int SimonSGCTask;
 	int SimonSGMTask;
@@ -93,6 +87,65 @@ public class SimonSays extends JavaPlugin implements Listener
 	{		
 		saveDefaultConfig();
 		reloadConfig();
+		
+		if(IsFirstStartup())
+		{
+			SimonLog.logInfo("Thank you for downloading SimonSays!");
+			
+			SimonLog.logInfo("Please read the installation and setup field at: http://dev.bukkit.org/bukkit-plugins/simon-says/");
+			
+			SimonLog.logInfo("As it's your first startup, SimonSays will not check for updates.");
+			
+		    SimonLog.logInfo("Note that SimonSays utilizes PluginMetrics for usage tracking.");
+		    
+		    SimonLog.logInfo("If you don't want usage tracking disable that in /plugins/PluginMetrics/config.yml");
+		    
+		    getConfig().set("firstStartup", "no");
+		    
+		    saveConfig();
+		    reloadConfig();
+		}
+		
+		if(isConfigUptoDate())
+		{
+			SimonLog.logInfo("Configuration file is up to date (:");
+		}
+		else
+		{
+			SimonLog.logInfo("Configuration file is not up to date, updated config!");
+			
+			String autoUpdate = getConfig().getString("autoUpdate");
+			
+			String useMySQL = getConfig().getString("useMySQL");
+			
+			String host = getConfig().getString("host");
+			String port = getConfig().getString("port");
+			String db = getConfig().getString("database");
+			String user = getConfig().getString("user");
+			String pw = getConfig().getString("password");
+			
+			File configFile = new File(getDataFolder(), "config.yml");
+			configFile.delete();
+			
+			saveDefaultConfig();
+			
+			reloadConfig();
+			
+			getConfig().set("autoUpdate", autoUpdate);
+			
+			getConfig().set("useMySQL", useMySQL);
+			
+			getConfig().set("host", host);
+			getConfig().set("port", port);
+			getConfig().set("database", db);
+			getConfig().set("user", user);
+			getConfig().set("password", pw);
+			
+			getConfig().set("firstStartup", "no");
+			
+			saveConfig();
+			reloadConfig();
+		}
 		
 		if(UsingMySQL() == true)
 		{	
@@ -144,7 +197,10 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 		}
 		
-		CheckUpdate();
+		if(!IsFirstStartup())
+		{
+			CheckUpdate();
+		}
 		
 		for(GameArena a : SimonGameArenaManager.getGameManager().arenas)
 		{
@@ -157,19 +213,49 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonGSM, 0L, 20L);
 		
+		try 
+		{
+		    SimonLog.logInfo("Metrics Started");
+		    Metrics metrics = new Metrics(this);
+		    metrics.start();
+		} 
+		catch (IOException e) 
+		{
+			SimonLog.logInfo("SimonSays failed to start usage tracking :(");
+		}
+		
+		
 		SimonLog.logInfo("Successfully loaded!");
 	}
 	
 	public void onDisable()
 	{
-		//reloadConfig();
-		//saveConfig();
-		
 		SimonGSM.arenagamestage.clear();
 		
 		SimonLog.logInfo("Successfully unloaded!");
 	}
 	
+	public boolean IsFirstStartup()
+	{
+		if(getConfig().getString("firstStartup").equalsIgnoreCase("yes") || getConfig().getString("firstStartup").equalsIgnoreCase("true"))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean isConfigUptoDate()
+	{
+		PluginDescriptionFile pdFile = this.getDescription();
+		
+		if(!getConfig().getString("configVersion").equals(pdFile.getVersion()))
+		{
+			return false;
+		}
+		
+		return true;
+	}
 	
 	protected void CheckUpdate()
 	{
@@ -212,7 +298,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
 			{
-				if(!player.hasPermission("SimonSays.create"))
+				if(!player.hasPermission("SimonSays.command.create"))
 				{
 					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
 					return true;
@@ -250,7 +336,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("createspecarena"))
 			{	
-				if(!player.hasPermission("SimonSays.create"))
+				if(!player.hasPermission("SimonSays.command.create"))
 				{
 					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
 					return true;
@@ -274,6 +360,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		  		else
 		  		{
 		  			SimonCFGM.CFGAddArena(SimonGameArenaManager.getGameManager().serializeLoc(player.getLocation()), arenaname, "1", "none");
+		  			SimonCFGM.CFGLoadGameArenas();
 		  		}
 		  		
 	    		player.sendMessage(SimonTag + "Created spectator arena " + arenaname + " ar your location");
@@ -282,7 +369,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			}
 			else if(cmd.getName().equalsIgnoreCase("deletearena"))
 			{
-				if(!player.hasPermission("SimonSays.delete"))
+				if(!player.hasPermission("SimonSays.command.delete"))
 				{
 					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
 					return true;
@@ -382,7 +469,6 @@ public class SimonSays extends JavaPlugin implements Listener
 	    		SimonGameArenaManager.getGameManager().removePlayer(player);
 	    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, RelatedArena);
 	    		player.sendMessage(SimonTag + "Successfully left the SimonArena!");
-	    		SimonLog.logSevereError(RelatedArena + "    " + GameArena);
 				return true;
 			}
 		}
@@ -628,9 +714,9 @@ public class SimonSays extends JavaPlugin implements Listener
 					{
 						if(!SignLine[1].isEmpty())
 						{	
-							if(!SignLine[2].contains("Invalid Arena"))
+							if(SimonGameArenaManager.getGameManager().getArena(SignLine[1]) != null)
 							{
-								if(!p.hasPermission("SimonSays.join"))
+								if(!p.hasPermission("SimonSays.sign.use"))
 								{
 									p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
 									return;
@@ -772,6 +858,13 @@ public class SimonSays extends JavaPlugin implements Listener
 		{
 			if(!SignLine[1].isEmpty())
 			{
+				if(!e.getPlayer().hasPermission("SimonSays.sign.create"))
+				{
+					e.getPlayer().sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					e.getBlock().breakNaturally();
+					return;
+				}
+				
 				e.setLine(0, ChatColor.GREEN + "[SimonSays]");
 				
 				if(SimonGameArenaManager.getGameManager().getArena(SignLine[1]) == null)
@@ -865,6 +958,13 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			if(SimonTag.contains("[SimonSays]"))
 			{
+				if(!e.getPlayer().hasPermission("SimonSays.sign.destory"))
+				{
+					e.getPlayer().sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					e.setCancelled(true);
+					return;
+				}
+				
 				if(UsingMySQL() == true)
 				{
 					if(SimonGameArenaManager.getGameManager().getArena(arenaname) != null)
@@ -873,6 +973,8 @@ public class SimonSays extends JavaPlugin implements Listener
 						SimonSignsM.SQLlinkSignsToArenas();
 						arenasign.update(false);
 						arenasign.getBlock().breakNaturally();
+						
+						SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
 					}
 				}
 				else
@@ -883,10 +985,10 @@ public class SimonSays extends JavaPlugin implements Listener
 						SimonSignsM.CFGlinkSignsToArenas();
 						arenasign.update(false);
 						arenasign.getBlock().breakNaturally();
+						
+						SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
 					}
 				}
-				
-				SimonGameArenaManager.getGameManager().getArena(arenaname).setSign(null);
 			}
 		}
 	}

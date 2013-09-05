@@ -1,4 +1,4 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.Dataloaders;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,8 +9,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 
+import net.edencampo.simonsays.SimonGameArenaManager;
+import net.edencampo.simonsays.SimonSays;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -170,6 +174,11 @@ public class SimonSignsLoader
 				
 				Block block = Bukkit.getServer().getWorld("world").getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(SignLoc));
 				
+				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
+				{
+					block.setType(Material.SIGN);
+				}
+				
 				Sign arenasign = (Sign) block.getState();
 				
 				SimonGameArenaManager.getGameManager().getArena(ArenaConnected).setSign(arenasign);
@@ -250,53 +259,6 @@ public class SimonSignsLoader
 		plugin.SimonLog.logInfo("Successfully linked sign to arena: '" + arenatoconnect + "'");
 	}
 	
-	
-	/*
-	public void CFGlinkSignsToArenas()
-	{
-		String ConnectedArenas = plugin.SimonSignsM.getSignsConfig().getString("ArenasConnected");
-		String SignLocations = plugin.SimonSignsM.getSignsConfig().getString("SignLocations");
-
-		if(ConnectedArenas == null)
-		{
-			plugin.SimonLog.logInfo("Can't find signs to load... Skipping!");
-			return;
-		}
-		
-		String[] Names = ConnectedArenas.split(" | ");
-		String[] Locations =  SignLocations.split(" | ");
-		
-		int id = -1;
-		while(id < Names.length)
-		{	
-			plugin.SimonLog.logWarning("ID = " + id + " " + " " + "Names.Length = " + Names.length + "Locations.Length =" + Locations.length);
-			
-			if(id == -1)
-			{
-				id = 0;
-			}
-			
-			if(Names[id].equals("DELETED"))
-			{
-				id++;
-				continue;
-			}
-			
-			
-			Block block = Bukkit.getServer().getWorld("world").getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]));
-			
-			Sign arenasign = (Sign) block.getState();
-			
-			SimonGameArenaManager.getGameManager().getArena(Names[id]).setSign(arenasign);
-			
-			plugin.SimonLog.logInfo("Successfully linked '" + Names[id] + "' with sign at " + Locations[id]);
-			
-			id++;
-		}
-		
-		plugin.SimonLog.logInfo("Finished loading all signs! (config)");
-	}*/
-	
 	public void CFGlinkSignsToArenas()
 	{
 		String ArenaNames = plugin.SimonSignsM.getSignsConfig().getString("ArenasConnected");
@@ -341,6 +303,11 @@ public class SimonSignsLoader
 				
 				block = Bukkit.getServer().getWorld(SimonGameArenaManager.getGameManager().getLocWorld(CorrectLocation)).getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(CorrectLocation));
 				
+				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
+				{
+					block.setType(Material.SIGN);
+				}
+				
 				arenasign = (Sign) block.getState();
 				
 				String CorrectName = Names[id].replace("|", "");
@@ -353,6 +320,11 @@ public class SimonSignsLoader
 				String CorrectLocation = Locations[id].replace("|", "");
 				
 				block = Bukkit.getServer().getWorld(SimonGameArenaManager.getGameManager().getLocWorld(CorrectLocation)).getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(CorrectLocation));
+				
+				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
+				{
+					block.setType(Material.SIGN);
+				}
 				
 				arenasign = (Sign) block.getState();
 				

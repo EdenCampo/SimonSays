@@ -15,10 +15,10 @@ public class GameArena
 		this.plugin = instance;
 	}
 	
-	String arenaname = "";
-	Sign arenasign = null;
-	Location spawn = null;
-	List<String> players = new ArrayList<String>();
+	public String arenaname = "";
+	public Sign arenasign = null;
+	public Location spawn = null;
+	public List<String> players = new ArrayList<String>();
 	
 	public GameArena(Location loc, String name)
 	{

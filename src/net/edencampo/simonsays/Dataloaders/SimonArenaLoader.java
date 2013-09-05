@@ -1,4 +1,4 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.Dataloaders;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
+
+import net.edencampo.simonsays.GameArena;
+import net.edencampo.simonsays.SimonGameArenaManager;
+import net.edencampo.simonsays.SimonSays;
+import net.edencampo.simonsays.SimonSpectateArenaManager;
+import net.edencampo.simonsays.SpectateArena;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -345,29 +351,20 @@ public class SimonArenaLoader
 		
 		if(RelatedArenas != null)
 		{
+			String[] Names = ArenaNames.split(" | ");
 			String[] Relateds = RelatedArenas.split(" | ");
 			
 			int id = 0;
 			while(id < Relateds.length)
 			{	
-				//plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
-				
-				if(!ArenaNames.contains(GameArena))
-				{
-					plugin.SimonLog.logWarning("Attempted to get an related arena for a non-existing arena! Canceled!");
-					return "none";
-				}
-				
-				if(ArenaNames.contains(GameArena))
+				if(Names[id].equalsIgnoreCase(GameArena))
 				{	
 					plugin.SimonLog.logInfo("Found related arena " + Relateds[id] + " for arena " + GameArena);
-					
 					return Relateds[id];
 				}
 				
 				id++;
 			}	
-			
 		}
 		
 		return "none";

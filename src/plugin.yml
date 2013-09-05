@@ -1,6 +1,6 @@
 name: SimonSays
 main: net.edencampo.simonsays.SimonSays
-version: 1.0.2
+version: 1.0.3
 author: Eden.Campo
 
 commands:
@@ -28,23 +28,38 @@ permissions:
     SimonSays.*:
         description: Gives access everything related to SimonSays
         children:
-            SimonSays.create: true
-            SimonSays.delete: true
-            SimonSays.join: true
-            SimonSays.leave: true
+            SimonSays.command.create: true
+            SimonSays.command.delete: true
+            SimonSays.command.join: true
+            SimonSays.command.leave: true
+            SimonSays.sign.create: true
+            SimonSays.sign.destroy: true
+            SimonSays.sign.use: true
             
-    SimonSays.create:
+    SimonSays.command.create:
         description: Gives the ability to create SimonArenas.
         default: op 
         
-    SimonSays.delete:
+    SimonSays.command.delete:
         description: Gives the ability to delete SimonArenas.
         default: op 
         
-    SimonSays.join:
+    SimonSays.command.join:
         description: Gives the ability to join SimonArenas.
         default: true
         
-    SimonSays.leave:
+    SimonSays.command.leave:
         description: Gives the ability to leave SimonArenas.
+        default: true
+        
+    SimonSays.sign.create:
+        description: Gives the ability to create SimonSigns.
+        default: op
+        
+    SimonSays.sign.destroy:
+        description: Gives the ability to destory SimonSigns.
+        default: op
+        
+    SimonSays.sign.use:
+        description: Gives the ability to use SimonSigns.
         default: true

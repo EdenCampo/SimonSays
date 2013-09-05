@@ -16,7 +16,7 @@ public class SimonSpectateArenaManager
 
 	public static SimonSpectateArenaManager a = new SimonSpectateArenaManager();
 
-	List<SpectateArena> arenas = new ArrayList<SpectateArena>();
+	public List<SpectateArena> arenas = new ArrayList<SpectateArena>();
 	int arenaSize = 0;
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;

@@ -1,4 +1,4 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.utils;
 
 import java.sql.Connection;
 

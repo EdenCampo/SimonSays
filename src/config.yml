@@ -1,17 +1,15 @@
 # Default Configuration for 'SimonSays' - Eden.Campo
 
-# Enable auto-updating or not?
-
 autoUpdate: true
-
-# Use MySQL or not; If so, enter your details below, else, everything is written on a local config file
 
 useMySQL: false
 
-# If using MySQL; details
+host: host
+port: port
+database: db
+user: username
+password: pw
 
-host: null
-port: null
-database: null
-user: null
-password: null
+
+configVersion: 1.0.3
+firstStartup: yes

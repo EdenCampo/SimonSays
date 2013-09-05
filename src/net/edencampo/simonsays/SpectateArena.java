@@ -7,9 +7,9 @@ import org.bukkit.Location;
 
 public class SpectateArena 
 {
-	  String arenaname = "";
-	  Location spawn = null;
-	  List<String> players = new ArrayList<String>();
+	  public String arenaname = "";
+	  public Location spawn = null;
+	  public List<String> players = new ArrayList<String>();
 	
 	  public SpectateArena(Location loc, String name)
 	  {

@@ -21,7 +21,7 @@ public class SimonGameArenaManager
 	Map<String, ItemStack[]> inv = new HashMap<String, ItemStack[]>();
 	Map<String, ItemStack[]> armor = new HashMap<String, ItemStack[]>();
 
-	List<GameArena> arenas = new ArrayList<GameArena>();
+	public List<GameArena> arenas = new ArrayList<GameArena>();
 	
 	int arenaSize = 0;
 	
