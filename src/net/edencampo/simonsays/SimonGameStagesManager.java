@@ -11,11 +11,12 @@ public class SimonGameStagesManager implements Listener, Runnable
 	{
 		SGAMESTAGE_ERROR,
 		SGAMESTAGE_WAITINGPLAYERS,
+		SGAMESTAGE_PREPERING,
 		SGAMESTAGE_INPROGRESS,
 		SGAMESTAGE_ENDED
 	}
 	
-	HashMap<GameArena,String> arenagamestage = new HashMap<GameArena, String>();
+	public HashMap<GameArena,String> arenagamestage = new HashMap<GameArena, String>();
     
     SimonSays plugin;
     
@@ -27,7 +28,7 @@ public class SimonGameStagesManager implements Listener, Runnable
     @Override
     public void run() 
     {
-		for(GameArena a : SimonGameArenaManager.getGameManager().arenas)
+		for(GameArena a : plugin.SimonAM.arenas)
 		{
 			String name = a.getName();
 			
@@ -42,44 +43,39 @@ public class SimonGameStagesManager implements Listener, Runnable
     		return;
     	}
         
-        if(!SimonGameArenaManager.getGameManager().getArena(arenaname).needsPlayers())
-        {
-        	arenagamestage.put(SimonGameArenaManager.getGameManager().getArena(arenaname), SimonGameStage.SGAMESTAGE_INPROGRESS.toString());
-        }
-        else
-        {
-        	arenagamestage.put(SimonGameArenaManager.getGameManager().getArena(arenaname), SimonGameStage.SGAMESTAGE_WAITINGPLAYERS.toString());
-        }
-        
         sign.setLine(0, ChatColor.GREEN + "[SimonSays]");
         sign.setLine(1, arenaname);
         		
-   		if(SimonGameArenaManager.getGameManager().getArena(arenaname) == null)
+   		if(plugin.SimonAM.getArena(arenaname) == null)
    		{
    			sign.setLine(2, ChatColor.RED + "Invalid Arena");
    			sign.setLine(3, ChatColor.RED + "SIGN SHUTDOWN..");
    			return;
    		}
    				
-   		sign.setLine(2, SimonGameArenaManager.getGameManager().getArena(arenaname).getPlayers().size() + "/10 players");
+   		sign.setLine(2, plugin.SimonAM.getArena(arenaname).getPlayers().size() + "/10 players");
    			
-   		String gamestage = arenagamestage.get(SimonGameArenaManager.getGameManager().getArena(arenaname));
+   		String gamestage = arenagamestage.get(plugin.SimonAM.getArena(arenaname));
 
    		if(gamestage.equals("SGAMESTAGE_ERROR"))
    		{
-   			//sign.setLine(3, ChatColor.DARK_AQUA + "SIGN SHUTDOWN..");
+   			sign.setLine(3, ChatColor.DARK_AQUA + "SIGN ERROR..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_WAITINGPLAYERS"))
    		{
-   			//sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
+   			sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
+   		}
+   		else if(gamestage.equals("SGAMESTAGE_PREPERING"))
+   		{
+   			sign.setLine(3, ChatColor.DARK_AQUA + "Starting..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_INPROGRESS"))
    		{
-   			//sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
+   			sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
    		}
    		else if(gamestage.equals("SGAMESTAGE_ENDED"))
    		{
-   			//sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
+   			sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
    		}
    				
    		sign.update(true);

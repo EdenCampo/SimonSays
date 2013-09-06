@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 
-import net.edencampo.simonsays.SimonGameArenaManager;
 import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Bukkit;
@@ -142,7 +141,7 @@ public class SimonSignsLoader
 				
 				Statement loadsigns = connection.createStatement();
 					
-				ResultSet res = loadsigns.executeQuery("SELECT ArenaConnected FROM SimonSays_SignLinks WHERE SignID = '" + id + "';");
+				ResultSet res = loadsigns.executeQuery("SELECT ArenaConnected,SignLocation FROM SimonSays_SignLinks WHERE SignID = '" + id + "';");
 				
 				String ArenaConnected = "";
 				String SignLoc = "";
@@ -151,6 +150,7 @@ public class SimonSignsLoader
 				if(res.next())
 				{
 					ArenaConnected = res.getString("ArenaConnected");
+					SignLoc = res.getString("SignLocation");
 					res.close();
 				}
 				else
@@ -158,21 +158,8 @@ public class SimonSignsLoader
 					id++;
 					continue;
 				}
-					
-				ResultSet res1 = loadsigns.executeQuery("SELECT SignLocation FROM SimonSays_SignLinks WHERE SignID = '" + id + "';");
 				
-				if(res1.next())
-				{
-					SignLoc = res1.getString("SignLocation");
-					res1.close();
-				}
-				else
-				{
-					id++;
-					continue;
-				}
-				
-				Block block = Bukkit.getServer().getWorld("world").getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(SignLoc));
+				Block block = Bukkit.getServer().getWorld("world").getBlockAt(plugin.SimonAM.deserializeLoc(SignLoc));
 				
 				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
 				{
@@ -181,7 +168,7 @@ public class SimonSignsLoader
 				
 				Sign arenasign = (Sign) block.getState();
 				
-				SimonGameArenaManager.getGameManager().getArena(ArenaConnected).setSign(arenasign);
+				plugin.SimonAM.getArena(ArenaConnected).setSign(arenasign);
 				
 				plugin.SimonLog.logInfo("Successfully linked '" + ArenaConnected + "' with sign at " + SignLoc);
 				
@@ -301,7 +288,7 @@ public class SimonSignsLoader
 			{
 				String CorrectLocation = Locations[id].replace("|", "");
 				
-				block = Bukkit.getServer().getWorld(SimonGameArenaManager.getGameManager().getLocWorld(CorrectLocation)).getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(CorrectLocation));
+				block = Bukkit.getServer().getWorld(plugin.SimonAM.getLocWorld(CorrectLocation)).getBlockAt(plugin.SimonAM.deserializeLoc(CorrectLocation));
 				
 				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
 				{
@@ -311,7 +298,7 @@ public class SimonSignsLoader
 				arenasign = (Sign) block.getState();
 				
 				String CorrectName = Names[id].replace("|", "");
-				SimonGameArenaManager.getGameManager().getArena(CorrectName).setSign(arenasign);
+				plugin.SimonAM.getArena(CorrectName).setSign(arenasign);
 				
 				plugin.SimonLog.logInfo("Successfully linked '" + CorrectName + "' with sign at " + CorrectLocation);
 			}
@@ -319,7 +306,7 @@ public class SimonSignsLoader
 			{
 				String CorrectLocation = Locations[id].replace("|", "");
 				
-				block = Bukkit.getServer().getWorld(SimonGameArenaManager.getGameManager().getLocWorld(CorrectLocation)).getBlockAt(SimonGameArenaManager.getGameManager().deserializeLoc(CorrectLocation));
+				block = Bukkit.getServer().getWorld(plugin.SimonAM.getLocWorld(CorrectLocation)).getBlockAt(plugin.SimonAM.deserializeLoc(CorrectLocation));
 				
 				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
 				{
@@ -330,7 +317,7 @@ public class SimonSignsLoader
 				
 				
 				String CorrectName = Names[id].replace("|", "");
-				SimonGameArenaManager.getGameManager().getArena(CorrectName).setSign(arenasign);
+				plugin.SimonAM.getArena(CorrectName).setSign(arenasign);
 				
 				plugin.SimonLog.logInfo("Successfully linked '" + CorrectName + "' with sign at " + CorrectLocation);
 			}

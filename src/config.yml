@@ -10,6 +10,7 @@ database: db
 user: username
 password: pw
 
+minimumPlayers: 3
 
-configVersion: 1.0.3
+configVersion: 1.0.4
 firstStartup: yes

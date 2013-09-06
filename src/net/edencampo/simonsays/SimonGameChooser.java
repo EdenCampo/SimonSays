@@ -115,7 +115,7 @@ public class SimonGameChooser implements Runnable
 		
 		for(Player p : plugin.getServer().getOnlinePlayers())
 		{
-			if(SimonGameArenaManager.getGameManager().IsPlaying(p))
+			if(plugin.SimonAM.IsPlaying(p))
 			{
 				plugin.SimonSGM.playerscompleted.clear();
 				plugin.SimonSGM.playermesseged.clear();

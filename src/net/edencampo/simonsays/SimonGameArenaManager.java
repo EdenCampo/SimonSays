@@ -13,10 +13,15 @@ import org.bukkit.inventory.ItemStack;
 
 public class SimonGameArenaManager
 {
+	SimonSays plugin;
+	
+	public SimonGameArenaManager(SimonSays instance)
+	{
+		plugin = instance;
+	}
+	
 	
 	public Map<String, Location> locs = new HashMap<String, Location>();
-
-	public static SimonGameArenaManager a = new SimonGameArenaManager();
 
 	Map<String, ItemStack[]> inv = new HashMap<String, ItemStack[]>();
 	Map<String, ItemStack[]> armor = new HashMap<String, ItemStack[]>();
@@ -26,22 +31,6 @@ public class SimonGameArenaManager
 	int arenaSize = 0;
 	
 	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
-	
-	SimonSays plugin;
-	public SimonGameArenaManager(SimonSays instance)
-	{
-		this.plugin = instance;
-	}
-	
-	public SimonGameArenaManager()
-	{
-		
-	}
-
-	public static SimonGameArenaManager getGameManager()
-	{
-	    return a;
-	}
 	 
 	public GameArena getArena(String arenaname)
 	{
@@ -70,6 +59,20 @@ public class SimonGameArenaManager
 	    
 	    p.getInventory().setArmorContents(null);
 	    p.getInventory().clear();
+	    
+	    if(getArena(a.getName()).needsPlayers())
+	    {
+	    	plugin.SimonGSM.arenagamestage.put(a, "SGAMESTAGE_WAITINGPLAYERS");
+	    	
+	    	p.sendMessage(SimonTag + "Successfully joined " + a.getName() + ", waiting for more players...");
+	    }
+	    else
+	    {
+	    	plugin.SimonGSM.arenagamestage.put(a, "SGAMESTAGE_PREPERING");
+	    	
+	    	Bukkit.getServer().broadcastMessage(SimonTag + "About to start a game in arena '" + a.getName() + "' in 10 seconds!");
+	    	plugin.SimonCD.CountDown(a.getName());
+	    }
 	    
 	    p.teleport(a.spawn);
 	}
@@ -104,7 +107,9 @@ public class SimonGameArenaManager
 	   
 	   if(a.getPlayers().size() == 0)
 	   {
-		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " wins!");
+		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " from arena '" + a.getName() + "' won!");
+		   
+		   plugin.SimonGSM.arenagamestage.put(plugin.SimonAM.getArena(a.getName()), "SGAMESTAGE_WAITINGPLAYERS");
 	   }
 	}
 
@@ -112,7 +117,7 @@ public class SimonGameArenaManager
 	{
 	   arenaSize++;
 		
-	   GameArena a = new GameArena(loc, arenaname);
+	   GameArena a = new GameArena(loc, arenaname, plugin);
 	   arenas.add(a);
 	}
 	
@@ -123,11 +128,16 @@ public class SimonGameArenaManager
 	
 	public boolean IsPlaying(Player p)
 	{
-		for(GameArena a : arenas)
+		String PlayerArena = getArenaIn(p);
+		
+		if(plugin.SimonAM.getArena(PlayerArena) != null)
 		{
-			if(a.getPlayers().contains(p.getName()))
+			if(plugin.SimonGSM.arenagamestage.get(getArena(PlayerArena)).equalsIgnoreCase("SGAMESTAGE_INPROGRESS"))
+			{
 				return true;
+			}
 		}
+		
 		return false;
 	}
 	
@@ -141,7 +151,7 @@ public class SimonGameArenaManager
 	        return true;
 	    }
 		
-	    String gamestage = plugin.SimonGSM.arenagamestage.get(SimonGameArenaManager.getGameManager().getArena(arenaname));
+	    String gamestage = plugin.SimonGSM.arenagamestage.get(getArena(arenaname));
 	    
 	    if(gamestage.equals("SGAMESTAGE_WAITINGPLAYERS"))
 	    {

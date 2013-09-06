@@ -10,20 +10,16 @@ public class GameArena
 {
 	SimonSays plugin;
 	
-	public GameArena(SimonSays instance)
-	{
-		this.plugin = instance;
-	}
-	
 	public String arenaname = "";
 	public Sign arenasign = null;
 	public Location spawn = null;
 	public List<String> players = new ArrayList<String>();
 	
-	public GameArena(Location loc, String name)
+	public GameArena(Location loc, String name, SimonSays instance)
 	{
 	  this.spawn = loc;
 	  this.arenaname = name;
+	  this.plugin = instance;
 	}
 	
 	public String getName()
@@ -48,7 +44,11 @@ public class GameArena
 
 	public boolean needsPlayers() 
 	{
-		if(players.size() > 3)
+		String minimum = plugin.getConfig().getString("minimumPlayers");
+		
+		int min = Integer.parseInt(minimum);
+		
+		if(players.size() >= min)
 		{
 			return false;
 		}

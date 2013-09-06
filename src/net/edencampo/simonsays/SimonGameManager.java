@@ -74,14 +74,15 @@ public class SimonGameManager implements Runnable
 	{
 		for(Player p : plugin.getServer().getOnlinePlayers())
 		{
-			if(SimonGameArenaManager.getGameManager().IsPlaying(p))
+			String GameArena = plugin.SimonAM.getArenaIn(p);
+			
+			if(plugin.SimonAM.IsPlaying(p))
 			{
 				if(!SimonActionCompleted(p))
 				{
-					String GameArena = SimonGameArenaManager.getGameManager().getArenaIn(p);
 					String RelatedArena = plugin.SimonCFGM.SQLGetRelatedGameArena(GameArena);
 					
-					SimonGameArenaManager.getGameManager().removePlayer(p);
+					plugin.SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					p.sendMessage(SimonTag + "Action not completed! Abandoned Game!");
 				}

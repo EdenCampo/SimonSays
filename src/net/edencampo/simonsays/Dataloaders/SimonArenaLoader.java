@@ -10,7 +10,6 @@ import java.sql.Statement;
 import java.util.logging.Level;
 
 import net.edencampo.simonsays.GameArena;
-import net.edencampo.simonsays.SimonGameArenaManager;
 import net.edencampo.simonsays.SimonSays;
 import net.edencampo.simonsays.SimonSpectateArenaManager;
 import net.edencampo.simonsays.SpectateArena;
@@ -173,50 +172,26 @@ public class SimonArenaLoader
 				String ArenaName = "";
 				String ArenaLocation = "";
 				
-				ResultSet res = loadarenas.executeQuery("SELECT ArenaType FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+				ResultSet res = loadarenas.executeQuery("SELECT ArenaType,ArenaName,ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
 				
 				if(res.next())
 				{
 					ArenaType = res.getString("ArenaType");
+					ArenaName = res.getString("ArenaName");
+					ArenaLocation = res.getString("ArenaLocation");
 					res.close();
 				}
 				else
-				{	
-					id++;
-					continue;
-				}
-				
-				ResultSet res1 = loadarenas.executeQuery("SELECT ArenaName FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-				
-				if(res1.next())
 				{
-					ArenaName = res1.getString("ArenaName");
-					res1.close();
-				}
-				else
-				{	
-					id++;
-					continue;
-				}
-					
-				ResultSet res2 = loadarenas.executeQuery("SELECT ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
-				
-				if(res2.next())
-				{
-					ArenaLocation = res2.getString("ArenaLocation");
-					res2.close();
-				}
-				else
-				{	
 					id++;
 					continue;
 				}
 				
 				if(ArenaType.equals("0"))
 				{
-					GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation), ArenaName);
-					SimonGameArenaManager.getGameManager().arenas.add(a);
-					SimonGameArenaManager.getGameManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
+					GameArena a = new GameArena(plugin.SimonAM.deserializeLoc(ArenaLocation), ArenaName, plugin);
+					plugin.SimonAM.arenas.add(a);
+					plugin.SimonAM.getArena(ArenaName).spawn = plugin.SimonAM.deserializeLoc(ArenaLocation);
 						
 					plugin.SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
 				}
@@ -224,7 +199,7 @@ public class SimonArenaLoader
 				{
 					SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
 					SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-					SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(ArenaLocation);
+					SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = plugin.SimonAM.deserializeLoc(ArenaLocation);
 						
 					plugin.SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
 				}
@@ -323,9 +298,9 @@ public class SimonArenaLoader
 		{	
 			if(Types[id].equals("0"))
 			{
-				GameArena a = new GameArena(SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]), Names[id]);
-				SimonGameArenaManager.getGameManager().arenas.add(a);
-				SimonGameArenaManager.getGameManager().getArena(Names[id]).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]);
+				GameArena a = new GameArena(plugin.SimonAM.deserializeLoc(Locations[id]), Names[id], plugin);
+				plugin.SimonAM.arenas.add(a);
+				plugin.SimonAM.getArena(Names[id]).spawn = plugin.SimonAM.deserializeLoc(Locations[id]);
 				
 				plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at " + Locations[id] + " " +  "type: 'GameArena'");
 			}
@@ -333,7 +308,7 @@ public class SimonArenaLoader
 			{
 				SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(Locations[id]), Names[id]);
 				SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-				SimonSpectateArenaManager.getSpecManager().getArena(Names[id]).spawn = SimonGameArenaManager.getGameManager().deserializeLoc(Locations[id]);
+				SimonSpectateArenaManager.getSpecManager().getArena(Names[id]).spawn = plugin.SimonAM.deserializeLoc(Locations[id]);
 				
 				plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at '" + Locations[id] + "' " +  "type: 'SpectateArena'");
 			}
