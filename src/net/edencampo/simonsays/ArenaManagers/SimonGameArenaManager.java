@@ -1,9 +1,11 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.ArenaManagers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -107,7 +109,7 @@ public class SimonGameArenaManager
 	   
 	   if(a.getPlayers().size() == 0)
 	   {
-		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " from arena '" + a.getName() + "' won!");
+		   Bukkit.broadcastMessage(SimonTag + "" + p.getName() + " from arena '" + a.getName() + "' won his game!");
 		   
 		   plugin.SimonGSM.arenagamestage.put(plugin.SimonAM.getArena(a.getName()), "SGAMESTAGE_WAITINGPLAYERS");
 	   }

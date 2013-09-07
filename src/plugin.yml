@@ -5,22 +5,22 @@ author: Eden.Campo
 
 commands:
   simonhelp:
-      description: SimonSays Help Command
+      description: SimonSays's help command with all the registered commands.
       usage: /<command>
   creategamearena:
-      description: SimonSays Create Game Arena
+      description: Creates a game arena linked with <RelatedArena> at your location.
       usage: /<command> <ArenaName> <RelatedArena>
   createspecarena:
-      description: SimonSays Create Spectate Arena
+      description: Creates a spectator arena at your location.
       usage: /<command>
   deletearena:
-      description: SimonSays Delete Arena
+      description: Deletes an arena.
       usage: /<command> <ArenaName>
   simonjoin:
-      description: SimonSays Join Arena
+      description: Joins <ArenaName>
       usage: /<command> <ArenaName>
   simonleave:
-      description: SimonSays Leave Arena
+      description: Leaves <ArenaName>
       usage: /<command>
       
       

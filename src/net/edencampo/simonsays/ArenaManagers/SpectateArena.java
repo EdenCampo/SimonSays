@@ -1,4 +1,4 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.ArenaManagers;
 
 import java.util.ArrayList;
 import java.util.List;

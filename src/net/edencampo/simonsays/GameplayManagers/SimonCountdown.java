@@ -1,4 +1,6 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.GameplayManagers;
+
+import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -23,8 +25,6 @@ public class SimonCountdown implements Runnable
 		GameArena = ArenaName;
 		
 		task = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
-		
-		Bukkit.getServer().broadcastMessage(plugin.SimonTag + "--- Game Starting for '" + ArenaName + "' ---");
 	}
 
 	@Override

@@ -110,7 +110,6 @@ public class SimonSignsLoader
 			}
 			catch (SQLException e) 
 			{
-				//e.printStackTrace();
 				plugin.SimonLog.logSevereError("Failed to get sign-count (MySQL)! Error: " + e.getMessage());
 			}
 		}
@@ -231,8 +230,8 @@ public class SimonSignsLoader
 		
 		if(ArenasConnected != null)
 		{
-			plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", ArenasConnected + " |" + arenatoconnect);
-			plugin.SimonSignsM.getSignsConfig().set("SignLocations", SignLocs + " |" + location);
+			plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", ArenasConnected + " | " + arenatoconnect);
+			plugin.SimonSignsM.getSignsConfig().set("SignLocations", SignLocs + " | " + location);
 		}
 		else
 		{
@@ -253,7 +252,7 @@ public class SimonSignsLoader
 
 		if(ArenaNames == null)
 		{
-			plugin.SimonLog.logInfo("Can't find signs to load... Skipping!");
+			plugin.SimonLog.logInfo("Can't find arenas to load... Skipping!");
 			return;
 		}
 		
@@ -270,59 +269,40 @@ public class SimonSignsLoader
 			Locations = ArenaLocs.split(" | ");
 		}
 		
-		
 		int id = 0;
 		while(id < Names.length)
 		{	
-			if(Names[id].equals("|DELETED"))
+			if(Names[id].equals("|") || Locations[id].equals("|"))
 			{
 				id++;
 				continue;
 			}
 			
+			
+			plugin.SimonLog.logInfo("Trying to link arena '" + Names[id] + "' with sign at " + Locations[id]);
+			
 			Block block;
 			
 			Sign arenasign;
+				
+			block = Bukkit.getServer().getWorld(plugin.SimonAM.getLocWorld(Locations[id])).getBlockAt(plugin.SimonAM.deserializeLoc(Locations[id]));
+				
+			if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
+			{
+				plugin.SimonLog.logInfo("Failed to link arena '" + Names[id] + "' with sign at " + Locations[id] + " couldn't find a sign there");
+				return;
+			}
+				
+			arenasign = (Sign) block.getState();
+
+			plugin.SimonAM.getArena(Names[id]).setSign(arenasign);
+				
+			plugin.SimonLog.logInfo("Successfully linked '" + Names[id] + "' with sign at " + Locations[id]);
 			
-			if(id > 1)
-			{
-				String CorrectLocation = Locations[id].replace("|", "");
-				
-				block = Bukkit.getServer().getWorld(plugin.SimonAM.getLocWorld(CorrectLocation)).getBlockAt(plugin.SimonAM.deserializeLoc(CorrectLocation));
-				
-				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
-				{
-					block.setType(Material.SIGN);
-				}
-				
-				arenasign = (Sign) block.getState();
-				
-				String CorrectName = Names[id].replace("|", "");
-				plugin.SimonAM.getArena(CorrectName).setSign(arenasign);
-				
-				plugin.SimonLog.logInfo("Successfully linked '" + CorrectName + "' with sign at " + CorrectLocation);
-			}
-			else
-			{
-				String CorrectLocation = Locations[id].replace("|", "");
-				
-				block = Bukkit.getServer().getWorld(plugin.SimonAM.getLocWorld(CorrectLocation)).getBlockAt(plugin.SimonAM.deserializeLoc(CorrectLocation));
-				
-				if(block.getType() != Material.SIGN && block.getType() != Material.SIGN_POST)
-				{
-					block.setType(Material.SIGN);
-				}
-				
-				arenasign = (Sign) block.getState();
-				
-				
-				String CorrectName = Names[id].replace("|", "");
-				plugin.SimonAM.getArena(CorrectName).setSign(arenasign);
-				
-				plugin.SimonLog.logInfo("Successfully linked '" + CorrectName + "' with sign at " + CorrectLocation);
-			}
 			id++;
 		}
+		
+		plugin.SimonLog.logInfo("Finished loading all signs! (config)");
 	}
 	
 	public void CFGremoveSignArena(String GameArena)
@@ -332,7 +312,7 @@ public class SimonSignsLoader
 		
 		if(ArenaNames == null || ArenaLocs == null)
 		{
-			plugin.SimonLog.logWarning("Attempted to delete an sign from an empty cfg! Canceled!");
+			plugin.SimonLog.logWarning("Attempted to delete an arena from an empty cfg! Canceled!");
 		}
 		else
 		{
@@ -342,9 +322,7 @@ public class SimonSignsLoader
 			int id = 0;
 			int correctid = 0;
 			while(id < Names.length)
-			{	
-				//plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
-				
+			{			
 				if(!ArenaNames.contains(GameArena))
 				{
 					plugin.SimonLog.logWarning("Attempted to delete an non-existing arena! Canceled!");
@@ -354,11 +332,6 @@ public class SimonSignsLoader
 				if(ArenaNames.contains(GameArena))
 				{	
 					correctid = id+2;
-					
-					plugin.SimonLog.logInfo("Deleting " + Names[correctid-1]);
-					plugin.SimonLog.logInfo("Deleting " + Locs[correctid-1]);
-					
-					plugin.SimonLog.logInfo("Found split id = " + correctid);
 					break;
 				}
 				
@@ -367,13 +340,11 @@ public class SimonSignsLoader
 			
 			id = -1;
 			while(id < correctid)
-			{
-				if(correctid == 0 && id == 0)
+			{	
+				if(correctid == 2 && id == -1)
 				{
-					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", "");
-					plugin.SimonSignsM.getSignsConfig().set("SignLocations", "");
-					
-					plugin.SimonLog.logInfo("Found only single arena(ID = " + id + ")");
+					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", " ");
+					plugin.SimonSignsM.getSignsConfig().set("SignLocations", " ");
 					break;
 				}
 				
@@ -381,11 +352,8 @@ public class SimonSignsLoader
 				
 				if(id == correctid-1)
 				{
-					plugin.SimonLog.logInfo("Skipping " + Names[correctid-1]);
-					plugin.SimonLog.logInfo("Skipping " + Locs[correctid-1]);
-					
-					String NewArenaNames = ArenaNames.replace(Names[correctid-1], "|DELETED");
-					String NewArenaLocs = ArenaLocs.replace(Locs[correctid-1], "|DELETED");
+					String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
+					String NewArenaLocs = ArenaLocs.replace(Locs[correctid], "DELETED");
 					
 					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", NewArenaNames);
 					plugin.SimonSignsM.getSignsConfig().set("SignLocations", NewArenaLocs);
@@ -400,9 +368,6 @@ public class SimonSignsLoader
 					id++;
 					continue;
 				}
-							
-				plugin.SimonLog.logInfo("Writing " + Names[id]);
-				plugin.SimonLog.logInfo("Writing " + Locs[id]);
 				
 				id++;
 			}
@@ -410,11 +375,9 @@ public class SimonSignsLoader
 			plugin.SimonSignsM.saveSignsConfig();
 			plugin.SimonSignsM.reloadSignsConfig();
 			
-			//plugin.SimonSignsM.CFGlinkSignsToArenas();
+			plugin.SimonSignsM.CFGlinkSignsToArenas();
 			
-			plugin.SimonLog.logInfo("Removed link for: " + GameArena + " with a sign!");
+			plugin.SimonLog.logInfo("Deleting sign link process finished for arena: " + GameArena);
 		}
 	}
 }
-
-//plugin.SimonLog.logInfo("Removed link for: " + GameArena + " with a sign!");

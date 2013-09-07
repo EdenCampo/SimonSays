@@ -1,4 +1,7 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.GameplayManagers;
+
+import net.edencampo.simonsays.SimonSays;
+import net.edencampo.simonsays.ArenaManagers.GameArena;
 
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;

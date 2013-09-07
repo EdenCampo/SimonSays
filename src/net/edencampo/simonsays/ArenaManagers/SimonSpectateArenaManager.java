@@ -1,9 +1,11 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.ArenaManagers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

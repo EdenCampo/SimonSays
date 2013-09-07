@@ -5,8 +5,15 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import net.edencampo.simonsays.ArenaManagers.GameArena;
+import net.edencampo.simonsays.ArenaManagers.SimonGameArenaManager;
+import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
 import net.edencampo.simonsays.Dataloaders.SimonArenaLoader;
 import net.edencampo.simonsays.Dataloaders.SimonSignsLoader;
+import net.edencampo.simonsays.GameplayManagers.SimonCountdown;
+import net.edencampo.simonsays.GameplayManagers.SimonGameChooser;
+import net.edencampo.simonsays.GameplayManagers.SimonGameManager;
+import net.edencampo.simonsays.GameplayManagers.SimonGameStagesManager;
 import net.edencampo.simonsays.utils.Metrics;
 import net.edencampo.simonsays.utils.MySQL;
 import net.edencampo.simonsays.utils.Updater;
@@ -147,6 +154,8 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			saveConfig();
 			reloadConfig();
+			
+			SimonLog.logInfo("Successfully updated config to version v" + getDescription().getVersion());
 		}
 		
 		if(UsingMySQL() == true)
@@ -160,6 +169,8 @@ public class SimonSays extends JavaPlugin implements Listener
 			String sqlDb = this.getConfig().getString("database");
 			String sqlUser = this.getConfig().getString("user");
 			String sqlPw = this.getConfig().getString("password");
+			
+			SimonLog.logInfo("Attempting to connect MySQL (" + sqlHost + ") using database " + sqlDb);
 			
 			sql = new MySQL(this, sqlHost, sqlPort, sqlDb, sqlUser, sqlPw);
 			
@@ -296,7 +307,9 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			if(cmd.getName().equalsIgnoreCase("simonhelp") || CommandLabel.equalsIgnoreCase("sh"))
 			{
-				player.sendMessage(SimonTag + "TODO: Finish /simonhelp");
+				player.sendMessage(SimonTag + "------------------- SimonSays v" + getDescription().getVersion() + "----------------");
+				player.sendMessage(SimonTag + "Listing " + getDescription().getCommands().size() + "commands:");
+				player.sendMessage(SimonTag + "TODO: Add all the commands here");
 				return true;
 			}
 			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
@@ -390,7 +403,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				if(UsingMySQL() == true)
 				{
 					SimonCFGM.SQLRemoveArena(arenaname);
-					player.sendMessage("Successfully removed arena: " + arenaname);
+					player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
 				}
 				else
 				{
@@ -490,10 +503,18 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		if(SimonAM.IsPlaying(p))
 		{
+			Location to = e.getTo();
+			Location from = e.getFrom();
+			
 			switch(SimonGameType)
 			{
 				case SGAME_DONTMOVE:
 				{
+					if(to == from)
+					{
+						return;
+					}
+					
 					String RelatedArena = "";
 					
 					if(UsingMySQL() == true)
@@ -505,7 +526,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "[SGAME_DONTMOVE] Incorrect! Abandoned Game!");
+					p.sendMessage(SimonTag + "Ohhh, you moved! Abandoned Game!");
 					SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					break;
@@ -513,14 +534,16 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_WALK:
 				{
-					SimonSGM.SimonActionSetDone(p);
-					
-					if(!SimonSGM.SimonMsgSent(p))
+					if(to != from)
 					{
-						p.sendMessage(SimonTag + "[SGAME_WALK] Correct! Lets Continue!");
-						SimonSGM.SimonSetMsgSent(p);
+						SimonSGM.SimonActionSetDone(p);
+						
+						if(!SimonSGM.SimonMsgSent(p))
+						{
+							p.sendMessage(SimonTag + "Great job! Lets Continue!");
+							SimonSGM.SimonSetMsgSent(p);
+						}
 					}
-					
 					break;
 				}
 				
@@ -537,7 +560,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "[SGAME_FAKEWALK] Incorrect! Abandoned Game!");
+					p.sendMessage(SimonTag + "Ohhh, you walked! Abandoned Game!");
 					SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					break;
@@ -545,7 +568,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_JUMP:
 				{
-					if(e.getTo().getY() > e.getFrom().getY())
+					if(to.getY() > from.getY())
 					{
 						Block block = e.getPlayer().getWorld().getBlockAt(new Location(e.getPlayer().getWorld(), e.getTo().getX(), e.getTo().getY()+2, e.getTo().getZ()));
 						
@@ -555,7 +578,7 @@ public class SimonSays extends JavaPlugin implements Listener
 							
 							if(!SimonSGM.SimonMsgSent(p))
 							{
-								p.sendMessage(SimonTag + "[SGAME_JUMP] Correct! Lets Continue!");
+								p.sendMessage(SimonTag + "Great job! Lets Continue!");
 								SimonSGM.SimonSetMsgSent(p);
 							}
 						}
@@ -583,7 +606,7 @@ public class SimonSays extends JavaPlugin implements Listener
 								RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 							}
 							
-							p.sendMessage(SimonTag + "[SGAME_FAKEJUMP] Incorrect! Abandoned Game!");
+							p.sendMessage(SimonTag + "Nope.. I didn't want you to jump! Abandoned Game!");
 							SimonAM.removePlayer(p);
 							SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 						}
@@ -612,7 +635,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 					if(!SimonSGM.SimonMsgSent(p))
 					{
-						p.sendMessage(SimonTag + "[SGAME_SNEAK] Correct! Lets Continue!");
+						p.sendMessage(SimonTag + "Great job! Lets Continue!");
 						SimonSGM.SimonSetMsgSent(p);
 					}
 					
@@ -633,7 +656,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "[SGAME_FAKESNEAK] Incorrect! Abandoned Game!");
+					p.sendMessage(SimonTag + "Woops! You've mistaken! Abandoned Game!");
 					SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 				}
@@ -664,7 +687,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(!SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "[SGAME_SPRINT] Correct! Lets Continue!");
+							p.sendMessage(SimonTag + "Great job! Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
 						}
 					}
@@ -673,20 +696,23 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				case SGAME_FAKESPRINT:
 				{
-					String RelatedArena = "";
-					
-					if(UsingMySQL() == true)
-					{
-						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
+					if(Sprinting == true)
+					{		
+						String RelatedArena = "";
+						
+						if(UsingMySQL() == true)
+						{
+							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
+						}
+						else
+						{
+							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
+						}
+						
+						p.sendMessage(SimonTag + "Nope. Abandoned Game!");
+						SimonAM.removePlayer(p);
+						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					}
-					else
-					{
-						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-					}
-					
-					p.sendMessage(SimonTag + "[SGAME_FAKESPRINT] Incorrect! Abandoned Game!");
-					SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 				}
 			
 			}
@@ -757,7 +783,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						SimonSGM.SimonActionSetDone(p);
 						if(!SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "[SGAME_PUNCHBLOCK] Correct! Lets Continue!");
+							p.sendMessage(SimonTag + "Great job! Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
 						}
 							
@@ -777,7 +803,7 @@ public class SimonSays extends JavaPlugin implements Listener
 							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 						}
 						
-						p.sendMessage(SimonTag + "[SGAME_FAKEPUNCHBLOCK] Incorrect! Abandoned Game!");
+						p.sendMessage(SimonTag + "I confused you ah? Abandoned Game!");
 						SimonAM.removePlayer(p);
 						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					}
@@ -809,7 +835,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(!SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "[SGAME_ATTACKPLAYER] Correct! Lets Continue!");
+							p.sendMessage(SimonTag + "Ouch, Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
 						}
 						
@@ -829,7 +855,7 @@ public class SimonSays extends JavaPlugin implements Listener
 							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 						}
 						
-						p.sendMessage(SimonTag + "[SGAME_FAKEATTACKPLAYER] Incorrect! Abandoned Game!");
+						p.sendMessage(SimonTag + "Wrong move, mate. Abandoned Game!");
 						SimonAM.removePlayer(p);
 						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					}
@@ -919,7 +945,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						if(!SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "[SGAME_PLACEBLOCK] Correct! Lets Continue!");
+							p.sendMessage(SimonTag + "Good job! Lets Continue!");
 							SimonSGM.SimonSetMsgSent(p);
 							e.setCancelled(true);
 						}
@@ -941,7 +967,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "[SGAME_FAKEPLACEBLOCK] Incorrect! Abandoned Game!");
+					p.sendMessage(SimonTag + "You've mistaken! Abandoned Game!");
 					SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					
@@ -979,7 +1005,6 @@ public class SimonSays extends JavaPlugin implements Listener
 						SimonSignsM.SQLremoveSignArena(arenaname);
 						SimonSignsM.SQLlinkSignsToArenas();
 						arenasign.update(false);
-						arenasign.getBlock().breakNaturally();
 						
 						SimonAM.getArena(arenaname).setSign(null);
 					}
@@ -991,7 +1016,6 @@ public class SimonSays extends JavaPlugin implements Listener
 						SimonSignsM.CFGremoveSignArena(arenaname);
 						SimonSignsM.CFGlinkSignsToArenas();
 						arenasign.update(false);
-						arenasign.getBlock().breakNaturally();
 						
 						SimonAM.getArena(arenaname).setSign(null);
 					}

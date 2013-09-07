@@ -1,4 +1,4 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.GameplayManagers;
 
 import java.util.Random;
 
@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import net.edencampo.simonsays.SimonSays;
 import net.edencampo.simonsays.SimonSays.SimonGame;
 
 public class SimonGameChooser implements Runnable 

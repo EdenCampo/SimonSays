@@ -9,10 +9,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 
-import net.edencampo.simonsays.GameArena;
 import net.edencampo.simonsays.SimonSays;
-import net.edencampo.simonsays.SimonSpectateArenaManager;
-import net.edencampo.simonsays.SpectateArena;
+import net.edencampo.simonsays.ArenaManagers.GameArena;
+import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
+import net.edencampo.simonsays.ArenaManagers.SpectateArena;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -395,8 +395,6 @@ public class SimonArenaLoader
 			int correctid = 0;
 			while(id < Names.length)
 			{	
-				//plugin.SimonLog.logWarning("ID = " + id + " " + "CorrectID = " + correctid + " " + "Length = " + Names.length);
-				
 				if(!ArenaNames.contains(GameArena))
 				{
 					plugin.SimonLog.logWarning("Attempted to delete an non-existing arena! Canceled!");
@@ -406,13 +404,6 @@ public class SimonArenaLoader
 				if(ArenaNames.contains(GameArena))
 				{	
 					correctid = id+2;
-					
-					plugin.SimonLog.logInfo("Deleting " + Names[correctid]);
-					plugin.SimonLog.logInfo("Deleting " + Locs[correctid]);
-					plugin.SimonLog.logInfo("Deleting " + Types[correctid]);
-					plugin.SimonLog.logInfo("Deleting " + Relateds[correctid]);
-					
-					plugin.SimonLog.logInfo("Found split id = " + correctid);
 					break;
 				}
 				
@@ -421,27 +412,18 @@ public class SimonArenaLoader
 			
 			id = -1;
 			while(id < correctid)
-			{
-				if(correctid == 0 && id == 0)
+			{	
+				if(correctid == 2 && id == -1)
 				{
-					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", "");
-					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", "");
-					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", "");
-					plugin.SimonCFGM.getArenaConfig().set("RelatedArena", "");
-					
-					plugin.SimonLog.logInfo("Found only single arena(ID = " + id + ")");
+					plugin.SimonCFGM.getArenaConfig().set("ArenaNames", " ");
+					plugin.SimonCFGM.getArenaConfig().set("ArenaLocations", " ");
+					plugin.SimonCFGM.getArenaConfig().set("ArenaTypes", " ");
+					plugin.SimonCFGM.getArenaConfig().set("RelatedArena", " ");
 					break;
 				}
 				
-				plugin.SimonLog.logInfo("Looping until " + correctid + " Current ID = " + id);
-				
 				if(id == correctid-1)
-				{
-					plugin.SimonLog.logInfo("Skipping " + Names[correctid]);
-					plugin.SimonLog.logInfo("Skipping " + Locs[correctid]);
-					plugin.SimonLog.logInfo("Skipping " + Types[correctid]);
-					plugin.SimonLog.logInfo("Skipping " + Relateds[correctid]);
-					
+				{		
 					String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
 					String NewArenaLocs = ArenaLocs.replace(Locs[correctid], "DELETED");
 					String NewArenaTypes = ArenaTypes.replace(Types[correctid], "DELETED");
@@ -462,11 +444,6 @@ public class SimonArenaLoader
 					id++;
 					continue;
 				}
-							
-				plugin.SimonLog.logInfo("Writing " + Names[id]);
-				plugin.SimonLog.logInfo("Writing " + Locs[id]);
-				plugin.SimonLog.logInfo("Writing " + Types[id]);
-				plugin.SimonLog.logInfo("Writing " + Relateds[id]);
 				
 				id++;
 			}
@@ -476,7 +453,7 @@ public class SimonArenaLoader
 			
 			plugin.SimonCFGM.CFGLoadGameArenas();
 			
-			plugin.SimonLog.logInfo("Deleting proccess finished for arena: " + GameArena);
+			plugin.SimonLog.logInfo("Deleting process finished for arena: " + GameArena);
 		}
 	}
 }

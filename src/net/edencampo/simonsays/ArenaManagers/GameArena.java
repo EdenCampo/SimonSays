@@ -1,7 +1,9 @@
-package net.edencampo.simonsays;
+package net.edencampo.simonsays.ArenaManagers;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
