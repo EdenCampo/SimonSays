@@ -231,23 +231,6 @@ public class SimonGameChooser implements Runnable
 			
 			case SGAME_PLACEBLOCK:
 			{
-				//Random RandomBlock = new Random(123456789);
-				
-				//int x = RandomBlock.nextInt(16);
-				//int y = RandomBlock.nextInt(40);
-				//int z = RandomBlock.nextInt(16);
-				
-				//Material randomblock = player.getWorld().getBlockAt(x, y, z).getType();
-				
-				//String blocklist = plugin.getConfig().getString("allowedBlockIDs");
-				
-				//String[] splitids = blocklist.split(" | ");
-				
-				//Random RandomBlock = new Random();
-				//int BlockPos = RandomBlock.nextInt(splitids.length);
-				
-				//String RandomBlockName = splitids[BlockPos].toUpperCase();
-				
 				Material randomblock = player.getTargetBlock(null, 5).getType();
 				
 				if(randomblock != null)

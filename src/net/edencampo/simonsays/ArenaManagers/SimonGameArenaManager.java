@@ -189,8 +189,9 @@ public class SimonGameArenaManager
 	}
 	
 	public String getLocWorld(String s)
-	{
+	{	
 		String[] st = s.split(",");
+		
 		return Bukkit.getServer().getWorld(st[0]).getName();
 	}
 }	

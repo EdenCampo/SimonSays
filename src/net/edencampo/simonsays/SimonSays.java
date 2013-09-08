@@ -423,8 +423,31 @@ public class SimonSays extends JavaPlugin implements Listener
 						player.sendMessage(SimonTag + "Successfully removed all arenas!");
 					}
 					else
-					{
-						SimonCFGM.CFGRemoveArena(arenaname);
+					{		
+						String location;
+						
+						String type;
+						
+						String RelatedArena = "none";
+						
+						if(SimonAM.getArena(arenaname) == null)
+						{
+							type = "1";
+							
+							location = SimonAM.serializeLoc(SimonSpectateArenaManager.getSpecManager().getArena(arenaname).spawn);
+						}
+						else
+						{
+							type = "0";
+							
+							RelatedArena = SimonCFGM.CFGGetRelatedArena(arenaname);
+							
+							location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).spawn);
+						}
+						
+						
+						SimonCFGM.CFGRemoveArena(arenaname, location, type, RelatedArena);
+						
 						player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
 					}
 				}
@@ -1013,7 +1036,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				{
 					if(SimonAM.getArena(arenaname) != null)
 					{
-						SimonSignsM.CFGremoveSignArena(arenaname);
+						SimonSignsM.CFGRemoveSign(arenaname, SimonAM.serializeLoc(e.getBlock().getLocation()));
 						SimonSignsM.CFGlinkSignsToArenas();
 						arenasign.update(false);
 						

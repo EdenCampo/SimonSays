@@ -272,12 +272,11 @@ public class SimonSignsLoader
 		int id = 0;
 		while(id < Names.length)
 		{	
-			if(Names[id].equals("|") || Locations[id].equals("|"))
+			if(Names[id].equals("|") || Locations[id].equals("|") || Locations[id].isEmpty() || Names[id].equals("DELETED"))
 			{
 				id++;
 				continue;
 			}
-			
 			
 			plugin.SimonLog.logInfo("Trying to link arena '" + Names[id] + "' with sign at " + Locations[id]);
 			
@@ -300,12 +299,15 @@ public class SimonSignsLoader
 			plugin.SimonLog.logInfo("Successfully linked '" + Names[id] + "' with sign at " + Locations[id]);
 			
 			id++;
+			
+			id++;
 		}
 		
 		plugin.SimonLog.logInfo("Finished loading all signs! (config)");
 	}
 	
-	public void CFGremoveSignArena(String GameArena)
+	
+	public void CFGRemoveSign(String GameArena, String location)
 	{
 		String ArenaNames = plugin.SimonSignsM.getSignsConfig().getString("ArenasConnected");
 		String ArenaLocs = plugin.SimonSignsM.getSignsConfig().getString("SignLocations");
@@ -313,6 +315,45 @@ public class SimonSignsLoader
 		if(ArenaNames == null || ArenaLocs == null)
 		{
 			plugin.SimonLog.logWarning("Attempted to delete an arena from an empty cfg! Canceled!");
+		}
+		else
+		{	
+			plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", CFGremoveFromList(ArenaNames, GameArena));
+			plugin.SimonSignsM.getSignsConfig().set("SignLocations", CFGremoveFromList(ArenaLocs, location));
+			
+			plugin.SimonLog.logInfo("Deleting process finished for arena: " + GameArena);
+			
+			plugin.SimonSignsM.saveSignsConfig();
+			plugin.SimonSignsM.reloadSignsConfig();
+			
+			plugin.SimonSignsM.CFGlinkSignsToArenas();
+		}
+	}
+	
+	
+    public String CFGremoveFromList(String list, String toRemove)
+    {
+        String[] split = list.split(" | ");
+        StringBuilder sb = new StringBuilder();
+ 
+        for (String s : split)
+        {
+            if (!s.equals("|") && !s.equals(toRemove))
+                sb.append(s + " | ");
+        }
+        
+        return sb.toString().contains("|") ? sb.toString().substring(0, sb.lastIndexOf(" | ")) : sb.toString();
+    }
+	
+	/*
+	public void CFGremoveSignArena(String GameArena)
+	{
+		String ArenaNames = plugin.SimonSignsM.getSignsConfig().getString("ArenasConnected");
+		String ArenaLocs = plugin.SimonSignsM.getSignsConfig().getString("SignLocations");
+		
+		if(ArenaNames == null || ArenaLocs == null)
+		{
+			plugin.SimonLog.logWarning("Attempted to delete a sign from an empty cfg! Canceled!");
 		}
 		else
 		{
@@ -325,11 +366,11 @@ public class SimonSignsLoader
 			{			
 				if(!ArenaNames.contains(GameArena))
 				{
-					plugin.SimonLog.logWarning("Attempted to delete an non-existing arena! Canceled!");
+					plugin.SimonLog.logWarning("Attempted to delete an non-existing sign! Canceled!");
 					return;
 				}
 				
-				if(ArenaNames.contains(GameArena))
+				if(Names[id].contains(GameArena))
 				{	
 					correctid = id+2;
 					break;
@@ -340,15 +381,20 @@ public class SimonSignsLoader
 			
 			id = -1;
 			while(id < correctid)
-			{	
-				if(correctid == 2 && id == -1)
+			{			
+				if(correctid == 2 && id == -1 && Names.length == 1)
 				{
-					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", " ");
-					plugin.SimonSignsM.getSignsConfig().set("SignLocations", " ");
+					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", null);
+					plugin.SimonSignsM.getSignsConfig().set("SignLocations", null);
+					
+					File signFile = new File(plugin.getDataFolder(), "SavedArenaSigns.yml");
+					signFile.delete();
+					
+					plugin.SimonSignsM.saveDefaultSignsConfig();
+					plugin.SimonSignsM.reloadSignsConfig();
+					
 					break;
 				}
-				
-				plugin.SimonLog.logInfo("Looping until " + correctid + " Current ID = " + id);
 				
 				if(id == correctid-1)
 				{
@@ -364,7 +410,6 @@ public class SimonSignsLoader
 				
 				if(id == -1)
 				{
-					plugin.SimonLog.logInfo("Skipping loop for ID -1");
 					id++;
 					continue;
 				}
@@ -379,5 +424,5 @@ public class SimonSignsLoader
 			
 			plugin.SimonLog.logInfo("Deleting sign link process finished for arena: " + GameArena);
 		}
-	}
+	}*/
 }
