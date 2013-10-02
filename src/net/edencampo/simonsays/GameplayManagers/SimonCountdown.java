@@ -47,6 +47,8 @@ public class SimonCountdown implements Runnable
 				if(second != 0)
 				{
 					p.sendMessage(plugin.SimonTag + ChatColor.BOLD + "" + second);
+					
+					plugin.SimonLog.logDebug("Waiting... Arena " + GameArena + " second:" + second);
 				}
 				
 				switch(second)
@@ -56,6 +58,9 @@ public class SimonCountdown implements Runnable
 						p.sendMessage(plugin.SimonTag + ChatColor.DARK_AQUA + "GO!");
 						plugin.SimonGSM.arenagamestage.put(plugin.SimonAM.getArena(GameArena), "SGAMESTAGE_INPROGRESS");
 						p.teleport(plugin.SimonAM.getArena(GameArena).spawn);
+						plugin.SimonScore.createSimonBoard(GameArena);
+						
+						plugin.SimonLog.logDebug("Successfully started a game at arena " + GameArena);
 					}
 				}
 			}

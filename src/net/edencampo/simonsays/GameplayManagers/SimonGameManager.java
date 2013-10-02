@@ -83,11 +83,14 @@ public class SimonGameManager implements Runnable
 			{
 				if(!SimonActionCompleted(p))
 				{
-					String RelatedArena = plugin.SimonCFGM.SQLGetRelatedGameArena(GameArena);
+					String RelatedArena = plugin.SimonArenasM.SQLGetRelatedGameArena(GameArena);
 					
 					plugin.SimonAM.removePlayer(p);
 					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
 					p.sendMessage(SimonTag + "Action not completed! Abandoned Game!");
+					
+					plugin.SimonLog.logDebug("Dropped player " + p.getName() + " from arena " + GameArena);
+					plugin.SimonLog.logDebug("Found related arena " + RelatedArena + " to teleport the player to.");
 				}
 			}
 		}

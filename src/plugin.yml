@@ -1,26 +1,29 @@
 name: SimonSays
 main: net.edencampo.simonsays.SimonSays
-version: 1.0.4
+version: 1.0.6
 author: Eden.Campo
 
 commands:
-  simonhelp:
-      description: SimonSays's help command with all the registered commands.
+  simonsays:
+      description: SimonSays's help command.
       usage: /<command>
-  creategamearena:
+  simonsays arena creategame:
       description: Creates a game arena linked with <RelatedArena> at your location.
       usage: /<command> <ArenaName> <RelatedArena>
-  createspecarena:
-      description: Creates a spectator arena at your location.
+  simonsays arena createspec:
+      description: Creates a spectator arena linked with <RelatedArena> at your location.
+      usage: /<command> <ArenaName>
+  simonsays arena delete:
+      description: Deletes <ArenaName>.
+      usage: /<command> <ArenaName>
+  simonsays arena list:
+      description: Lists all existing arenas
       usage: /<command>
-  deletearena:
-      description: Deletes an arena.
+  simonsays join:
+      description: Joins <ArenaName>,
       usage: /<command> <ArenaName>
-  simonjoin:
-      description: Joins <ArenaName>
-      usage: /<command> <ArenaName>
-  simonleave:
-      description: Leaves <ArenaName>
+  simonsays leave:
+      description: Leaves your current arena.
       usage: /<command>
       
       

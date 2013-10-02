@@ -28,7 +28,14 @@ public class SimonLogger
 
 	public void logEnum(SimonGame result)
 	{
-		plugin.getLogger().info("" + result);
-		
+		plugin.getLogger().info("" + result);	
+	}
+	
+	public void logDebug(String msg)
+	{
+		if(plugin.getConfig().getString("enableDebug").equalsIgnoreCase("true") || (plugin.getConfig().getString("enableDebug").equalsIgnoreCase("yes")))
+		{
+			plugin.getLogger().info("Debug: " + msg);	
+		}
 	}
 }

@@ -2,6 +2,8 @@ package net.edencampo.simonsays;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -12,8 +14,10 @@ import net.edencampo.simonsays.Dataloaders.SimonArenaLoader;
 import net.edencampo.simonsays.Dataloaders.SimonSignsLoader;
 import net.edencampo.simonsays.GameplayManagers.SimonCountdown;
 import net.edencampo.simonsays.GameplayManagers.SimonGameChooser;
+import net.edencampo.simonsays.GameplayManagers.SimonGameEvents;
 import net.edencampo.simonsays.GameplayManagers.SimonGameManager;
 import net.edencampo.simonsays.GameplayManagers.SimonGameStagesManager;
+import net.edencampo.simonsays.GameplayManagers.SimonScoreManager;
 import net.edencampo.simonsays.utils.Metrics;
 import net.edencampo.simonsays.utils.MySQL;
 import net.edencampo.simonsays.utils.Updater;
@@ -21,27 +25,10 @@ import net.edencampo.simonsays.utils.Updater;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -53,6 +40,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class SimonSays extends JavaPlugin implements Listener
 {	
+	/*
+	 * TODO: Finish all debugging messages
+	 * TODO: Points system
+	 * TODO: More SimonGames...!
+	 */
+	
+	
 	public enum SimonGame
 	{
 		SGAME_NONE,
@@ -77,11 +71,13 @@ public class SimonSays extends JavaPlugin implements Listener
 	public SimonLogger SimonLog = new SimonLogger(this);
 	public SimonGameChooser SimonSGC = new SimonGameChooser(this);
 	public SimonGameManager SimonSGM = new SimonGameManager(this);
-	public SimonArenaLoader SimonCFGM = new SimonArenaLoader(this);
+	public SimonArenaLoader SimonArenasM = new SimonArenaLoader(this);
 	public SimonSignsLoader SimonSignsM = new SimonSignsLoader(this);
 	public SimonGameStagesManager SimonGSM = new SimonGameStagesManager(this);
 	public SimonCountdown SimonCD = new SimonCountdown(this);
 	public SimonGameArenaManager SimonAM = new SimonGameArenaManager(this);
+	public SimonGameEvents SimonGE = new SimonGameEvents(this);
+	public SimonScoreManager SimonScore = new SimonScoreManager(this);
 	
 	public String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
@@ -93,12 +89,30 @@ public class SimonSays extends JavaPlugin implements Listener
 	boolean usingLocalConfig;
 	
 	public void onEnable()
-	{		
+	{
+		SimonLog.logDebug("Trying to activate SimonSays!");
+		
+		try 
+		{
+		    Metrics metrics = new Metrics(this);
+		    metrics.start();
+		    
+		    SimonLog.logDebug("Metrics activation success.");
+		} 
+		catch (IOException e) 
+		{
+			SimonLog.logInfo("SimonSays failed to start usage tracking :(");
+		}
+		
+		String osname = System.getProperty("os.name");
+		
 		saveDefaultConfig();
 		reloadConfig();
 		
 		if(IsFirstStartup())
 		{
+			SimonLog.logDebug("Found first startup! Wait, debug mode is on in first startup? Ahh you messed up with my config! (:");
+			
 			SimonLog.logInfo("Thank you for downloading SimonSays!");
 			
 			SimonLog.logInfo("Please read the installation and setup field at: http://dev.bukkit.org/bukkit-plugins/simon-says/");
@@ -121,7 +135,9 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 		else
 		{
-			SimonLog.logInfo("Configuration file is not up to date, updated config!");
+			SimonLog.logInfo("Configuration file is outdated, updating...");
+			
+			SimonLog.logDebug("Gathering OLD config data...");
 			
 			String autoUpdate = getConfig().getString("autoUpdate");
 			
@@ -140,6 +156,16 @@ public class SimonSays extends JavaPlugin implements Listener
 			
 			reloadConfig();
 			
+			SimonLog.logDebug("autoUpdate: " + autoUpdate);
+			
+			SimonLog.logDebug("useMySQL: " + useMySQL);
+			
+			SimonLog.logDebug("host: " + host);
+			SimonLog.logDebug("port: " + port);
+			SimonLog.logDebug("database: " + db);
+			SimonLog.logDebug("user: " + user);
+			SimonLog.logDebug("password: " + "******");
+			
 			getConfig().set("autoUpdate", autoUpdate);
 			
 			getConfig().set("useMySQL", useMySQL);
@@ -149,6 +175,8 @@ public class SimonSays extends JavaPlugin implements Listener
 			getConfig().set("database", db);
 			getConfig().set("user", user);
 			getConfig().set("password", pw);
+			
+			getConfig().set("configVersion", getDescription().getVersion());
 			
 			getConfig().set("firstStartup", "no");
 			
@@ -160,6 +188,8 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		if(UsingMySQL() == true)
 		{	
+			SimonLog.logDebug("Connection attempt to MySQL started");
+			
 			SimonLog.logInfo("Detected MySQL usage, connecting..");
 			
 			usingLocalConfig = false;
@@ -170,76 +200,79 @@ public class SimonSays extends JavaPlugin implements Listener
 			String sqlUser = this.getConfig().getString("user");
 			String sqlPw = this.getConfig().getString("password");
 			
+			SimonLog.logDebug("host: " + sqlHost);
+			SimonLog.logDebug("port: " + sqlPort);
+			SimonLog.logDebug("database: " + sqlDb);
+			SimonLog.logDebug("user: " + sqlUser);
+			SimonLog.logDebug("password: " + "******");
+			
 			SimonLog.logInfo("Attempting to connect MySQL (" + sqlHost + ") using database " + sqlDb);
 			
-			sql = new MySQL(this, sqlHost, sqlPort, sqlDb, sqlUser, sqlPw);
-			
-			sql.openConnection();
+			sql = new MySQL(this, sqlHost, sqlPort, sqlDb, sqlUser, sqlPw);		
 			
 			try 
 			{
+				SimonLog.logDebug("Opening connection to MySQL server.");
+				
+				sql.openConnection();
+				
+				SimonLog.logDebug("Opened!");
+				
 				Statement createtables = sql.getConnection().createStatement();
 				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, RelatedArena varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
 				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_SignLinks(ArenaConnected varchar(255) NOT NULL, SignLocation varchar(255) NOT NULL, SignID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`SignID`));");
-				SimonLog.logInfo("Successfully executed onEnable() queries!");
+				SimonLog.logDebug("Executed: CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, RelatedArena varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
+				SimonLog.logDebug("Executed: CREATE TABLE IF NOT EXISTS SimonSays_SignLinks(ArenaConnected varchar(255) NOT NULL, SignLocation varchar(255) NOT NULL, SignID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`SignID`));");
 			} 
 			catch (SQLException e) 
 			{
-				e.printStackTrace();
-				SimonLog.logSevereError(ChatColor.RED + "WARNING: Arenas will not be saved!");
+				SimonLog.logSevereError(ChatColor.RED + "Failed to connect MySQL! Expect errors...");
 			}
 			
-			SimonCFGM.SQLLoadGameArenas();
+			SimonArenasM.SQLLoadGameArenas();
 			SimonSignsM.SQLlinkSignsToArenas();
+			
+			SimonLog.logInfo("Loaded with MySQL support! System: (" + osname + ")");
 		}
 		else
 		{
 			SimonLog.logInfo("Using local-config, loading data...");
 			usingLocalConfig = true;
 			
-			SimonCFGM.saveDefaultArenaConfig();
-			SimonCFGM.saveArenaConfig();
-			SimonCFGM.reloadArenaConfig();
+			SimonArenasM.saveDefaultArenaConfig();
+			SimonArenasM.saveArenaConfig();
+			SimonArenasM.reloadArenaConfig();
 			
 			SimonSignsM.saveDefaultSignsConfig();
 			SimonSignsM.saveSignsConfig();
 			SimonSignsM.reloadSignsConfig();
 			
-			SimonCFGM.CFGLoadGameArenas();
+			SimonArenasM.CFGLoadGameArenas();
+			
 			SimonSignsM.CFGlinkSignsToArenas();
 			
+			SimonLog.logInfo("Loaded with local-config support! System: (" + osname + ")");
 		}
 		
 		if(!IsFirstStartup())
 		{
 			CheckUpdate();
+			
+			SimonLog.logDebug("Checked for updates.");
 		}
 		
 		for(GameArena a : SimonAM.arenas)
 		{		
 			SimonGSM.arenagamestage.put(a, "SGAMESTAGE_WAITINGPLAYERS");
+			
+			SimonLog.logDebug("GameArena " + a + " is now SGAMESTAGE_WAITINGPLAYERS");
 		}
 		
-		Bukkit.getPluginManager().registerEvents(this, this);
+		Bukkit.getPluginManager().registerEvents(SimonGE, this);
 		
 		SimonSGCTask = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonSGC, 0L, 75L);
 		
 		Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, SimonGSM, 0L, 20L);
-		
-		try 
-		{
-		    Metrics metrics = new Metrics(this);
-		    metrics.start();
-		    SimonLog.logInfo("Metrics Started");
-		} 
-		catch (IOException e) 
-		{
-			SimonLog.logInfo("SimonSays failed to start usage tracking :(");
-		}
-		
-		String osname = System.getProperty("os.name");
-		
-		SimonLog.logInfo("Successfully loaded! System: (" + osname + ")");
 	}
 	
 	public void onDisable()
@@ -295,7 +328,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 		else
 		{
-			SimonLog.logInfo("Skipped update-checking...");
+			SimonLog.logDebug("Skipped update-checking...");
 		}
 	}
 	
@@ -303,748 +336,384 @@ public class SimonSays extends JavaPlugin implements Listener
 	{
 		if(sender instanceof Player)
 		{
-			Player player = (Player)sender;
+			Player player = (Player) sender;
 			
-			if(cmd.getName().equalsIgnoreCase("simonhelp") || CommandLabel.equalsIgnoreCase("sh"))
+			if(cmd.getName().equalsIgnoreCase("simonsays") || cmd.getName().equalsIgnoreCase("ss"))
 			{
-				player.sendMessage(SimonTag + "------------------- SimonSays v" + getDescription().getVersion() + "----------------");
-				player.sendMessage(SimonTag + "Listing " + getDescription().getCommands().size() + "commands:");
-				player.sendMessage(SimonTag + "TODO: Add all the commands here");
-				return true;
-			}
-			else if(cmd.getName().equalsIgnoreCase("creategamearena"))
-			{
-				if(!player.hasPermission("SimonSays.command.create"))
+				if(args.length == 0)
 				{
-					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					showSimonHelp(player);
 					return true;
 				}
 				
-				if(args.length != 2)
+				if(args[0].equalsIgnoreCase("join"))
 				{
-					player.sendMessage(SimonTag + "Usage: /creategamearena <ArenaName> <RelatedArena>");
-					return true;
-				}
-				
-				String arenaname = args[0];
-				String relatedarena = args[1];
-				
-		  		SimonAM.createArena(player.getLocation(), arenaname);
-		  		
-		  		if(UsingMySQL() == true)
-		  		{
-		  			SimonCFGM.AddArenaToSQL(SimonAM.serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
-		  			SimonCFGM.SQLLoadGameArenas();
-		  		}
-		  		else
-		  		{
-		  			SimonCFGM.CFGAddArena(SimonAM.serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
-		  			SimonCFGM.saveArenaConfig();
-		  			SimonCFGM.reloadArenaConfig();
-		  		}
-		  		
-	    		player.sendMessage(SimonTag + "Created " + arenaname + " at your location");
-	    		
-	    		SimonLog.logInfo(player.getName() + " Created game arena " + arenaname);
-	    		
-	    		this.SimonGSM.arenagamestage.put(SimonAM.getArena(arenaname), "SGAMESTAGE_WAITINGPLAYERS");
-				return true;
-			}
-			else if(cmd.getName().equalsIgnoreCase("createspecarena"))
-			{	
-				if(!player.hasPermission("SimonSays.command.create"))
-				{
-					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
-					return true;
-				}
-				
-				if(args.length != 1)
-				{
-					player.sendMessage(SimonTag + "Usage: /createspecarena <ArenaName>");
-					return true;
-				}
-				
-				String arenaname = args[0];
-				
-		  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation(), arenaname);
-		  		
-		  		if(UsingMySQL() == true)
-		  		{
-		  			SimonCFGM.AddArenaToSQL(SimonAM.serializeLoc(player.getLocation()), arenaname, "1", "none");
-		  			SimonCFGM.SQLLoadGameArenas();
-		  		}
-		  		else
-		  		{
-		  			SimonCFGM.CFGAddArena(SimonAM.serializeLoc(player.getLocation()), arenaname, "1", "none");
-		  			SimonCFGM.CFGLoadGameArenas();
-		  		}
-		  		
-	    		player.sendMessage(SimonTag + "Created spectator arena " + arenaname + " ar your location");
-	    		SimonLog.logInfo(player.getName() + " Created spectator arena " + arenaname);
-				return true;
-			}
-			else if(cmd.getName().equalsIgnoreCase("deletearena"))
-			{
-				if(!player.hasPermission("SimonSays.command.delete"))
-				{
-					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
-					return true;
-				}
-				
-				
-				if(args.length != 1)
-				{
-					player.sendMessage(SimonTag + "Usage: /deletearena <ArenaName>");
-					return true;
-				}
-				
-				String arenaname = args[0];
-				
-				if(UsingMySQL() == true)
-				{
-					SimonCFGM.SQLRemoveArena(arenaname);
-					player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
-				}
-				else
-				{
-					if(arenaname.equalsIgnoreCase("clearall") || arenaname.equalsIgnoreCase("all") || arenaname.equalsIgnoreCase("deleteall"))
+					if(!player.hasPermission("SimonSays.command.join"))
 					{
-						SimonCFGM.getArenaConfig().set("ArenaNames", "");
-						SimonCFGM.getArenaConfig().set("ArenaLocations", "");
-						SimonCFGM.getArenaConfig().set("ArenaTypes", "");
+						player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+						return true;
+					}
 					
-						SimonCFGM.saveArenaConfig();
-						SimonCFGM.reloadArenaConfig();
-						
-						SimonCFGM.CFGLoadGameArenas();
-						
-						SimonLog.logInfo(player.getName() + " cleared all arenas!");
-						
-						player.sendMessage(SimonTag + "Successfully removed all arenas!");
+					if(args.length != 2)
+					{
+						showSimonHelp(player);
+						return true;
+					}
+					
+					String arenaname = args[1];
+		    		
+					if(SimonAM.getArena(arenaname) == null)
+					{
+						player.sendMessage(SimonTag + ChatColor.RED + "Invalid Arena: " + arenaname);
+						return true;
+					}
+					
+		    		if(SimonAM.getArena(arenaname).needsPlayers())
+		    		{
+			    		SimonAM.addPlayer(player, arenaname);
+			    		player.setGameMode(GameMode.SURVIVAL);	
+		    		}
+		    		else
+		    		{
+		    			player.sendMessage(SimonTag + "Woops! Game is already in progress!");
+		    		}
+		    		
+					return true;
+				}
+				else if(args[0].equalsIgnoreCase("leave"))
+				{
+					if(!player.hasPermission("SimonSays.command.leave"))
+					{
+						player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+						return true;
+					}
+					
+					String GameArena = SimonAM.getArenaIn(player);
+					
+					if(GameArena.equals("none"))
+					{
+						player.sendMessage(SimonTag + "Woops! I can't find in what arena you are :(");
+						return true;
+					}
+					
+					String RelatedArena = "none";
+					
+					if(UsingMySQL() == true)
+					{
+						RelatedArena = SimonArenasM.SQLGetRelatedGameArena(GameArena);
 					}
 					else
-					{		
-						String location;
-						
-						String type;
-						
-						String RelatedArena = "none";
-						
-						if(SimonAM.getArena(arenaname) == null)
+					{
+						RelatedArena = SimonArenasM.CFGGetRelatedArena(GameArena);
+					}
+					
+		    		SimonAM.removePlayer(player);
+		    		
+		    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, RelatedArena);
+		    		
+		    		player.sendMessage(SimonTag + "Successfully left " + GameArena + " !");
+		    		
+					return true;
+				}
+				
+				
+				else if(args[0].equalsIgnoreCase("arena"))
+				{
+					if(args[1].equalsIgnoreCase("creategame"))
+					{
+						if(!player.hasPermission("SimonSays.command.create"))
 						{
-							type = "1";
-							
-							location = SimonAM.serializeLoc(SimonSpectateArenaManager.getSpecManager().getArena(arenaname).spawn);
+							player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+							return true;
+						}
+						
+						if(args.length < 3)
+						{
+							showSimonHelp(player);
+							return true;
+						}
+						
+						String arenaname = args[2];
+						String relatedarena = args[3];
+						
+				  		SimonAM.createArena(player.getLocation(), arenaname);
+				  		
+				  		if(UsingMySQL() == true)
+				  		{
+				  			SimonArenasM.AddArenaToSQL(SimonAM.serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
+				  			SimonArenasM.SQLLoadGameArenas();
+				  		}
+				  		else
+				  		{
+				  			SimonArenasM.CFGAddArena(SimonAM.serializeLoc(player.getLocation()), arenaname, "0", relatedarena);
+				  			SimonArenasM.saveArenaConfig();
+				  			SimonArenasM.reloadArenaConfig();
+				  		}
+				  		
+			    		player.sendMessage(SimonTag + "Created " + arenaname + " at your location");
+			    		
+			    		SimonLog.logInfo(player.getName() + " Created game arena " + arenaname);
+			    		
+			    		SimonGSM.arenagamestage.put(SimonAM.getArena(arenaname), "SGAMESTAGE_WAITINGPLAYERS");
+			    		
+						return true;
+					}
+					else if(args[1].equalsIgnoreCase("createspec"))
+					{
+						if(!player.hasPermission("SimonSays.command.create"))
+						{
+							player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+							return true;
+						}
+						
+						if(args.length < 2)
+						{
+							showSimonHelp(player);
+							return true;
+						}
+						
+						String arenaname = args[2];
+						
+				  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation(), arenaname);
+				  		
+				  		if(UsingMySQL() == true)
+				  		{
+				  			SimonArenasM.AddArenaToSQL(SimonAM.serializeLoc(player.getLocation()), arenaname, "1", "none");
+				  			SimonArenasM.SQLLoadGameArenas();
+				  		}
+				  		else
+				  		{
+				  			SimonArenasM.CFGAddArena(SimonAM.serializeLoc(player.getLocation()), arenaname, "1", "none");
+				  			SimonArenasM.CFGLoadGameArenas();
+				  		}
+				  		
+			    		player.sendMessage(SimonTag + "Created spectator arena " + arenaname + " ar your location");
+			    		SimonLog.logInfo(player.getName() + " Created spectator arena " + arenaname);
+			    		
+						return true;
+					}
+					
+					else if(args[1].equalsIgnoreCase("delete"))
+					{
+						if(!player.hasPermission("SimonSays.command.delete"))
+						{
+							player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+							return true;
+						}
+						
+						
+						if(args.length < 2)
+						{
+							showSimonHelp(player);
+							return true;
+						}
+						
+						String arenaname = args[2];
+						
+						if(UsingMySQL() == true)
+						{
+							SimonArenasM.SQLRemoveArena(arenaname);
+							player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
 						}
 						else
 						{
-							type = "0";
+							if(arenaname.equalsIgnoreCase("clearall") || arenaname.equalsIgnoreCase("all") || arenaname.equalsIgnoreCase("deleteall"))
+							{
+								SimonArenasM.getArenaConfig().set("ArenaNames", "");
+								SimonArenasM.getArenaConfig().set("ArenaLocations", "");
+								SimonArenasM.getArenaConfig().set("ArenaTypes", "");
 							
-							RelatedArena = SimonCFGM.CFGGetRelatedArena(arenaname);
-							
-							location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).spawn);
+								SimonArenasM.saveArenaConfig();
+								SimonArenasM.reloadArenaConfig();
+								
+								SimonArenasM.CFGLoadGameArenas();
+								
+								SimonLog.logInfo(player.getName() + " cleared all arenas!");
+								
+								player.sendMessage(SimonTag + "Successfully removed all arenas!");
+							}
+							else
+							{		
+								String location;
+								
+								String type;
+								
+								String RelatedArena = "none";
+								
+								if(SimonAM.getArena(arenaname) == null)
+								{
+									type = "1";
+									
+									location = SimonAM.serializeLoc(SimonSpectateArenaManager.getSpecManager().getArena(arenaname).spawn);
+								}
+								else
+								{
+									type = "0";
+									
+									RelatedArena = SimonArenasM.CFGGetRelatedArena(arenaname);
+									
+									location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).spawn);
+								}
+								
+								
+								SimonArenasM.CFGRemoveArena(arenaname, location, type, RelatedArena);
+								
+								player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
+							}
 						}
 						
-						
-						SimonCFGM.CFGRemoveArena(arenaname, location, type, RelatedArena);
-						
-						player.sendMessage(SimonTag + "Successfully removed arena: " + arenaname);
+						return true;
 					}
-				}
-				
-				return true;
-			}
-			else if(cmd.getName().equalsIgnoreCase("simonjoin") || CommandLabel.equalsIgnoreCase("sj"))
-			{
-				if(!player.hasPermission("SimonSays.join"))
-				{
-					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					
+					else if(args[1].equalsIgnoreCase("list"))
+					{
+						if(UsingMySQL() == true)
+						{
+							String arenacount = SimonArenasM.getSQLGameArenasCount();
+							
+							int arenas = Integer.parseInt(arenacount);
+							
+							if(arenas == 0)
+							{
+								player.sendMessage(SimonTag + "Can't find any arenas to display...");
+								return true;
+							}
+							
+							player.sendMessage(SimonTag + "--- Listing current arenas ---");
+							
+							try 
+							{
+								int id = 1;
+								while(id < arenas)
+								{
+									if(id == 0)
+									{
+										id++;
+										continue;
+									}
+										
+									Connection connection = sql.getConnection();
+									
+									Statement loadarenas = connection.createStatement();
+									
+									String ArenaType = "";
+									String ArenaName = "";
+									String ArenaLocation = "";
+									
+									ResultSet res = loadarenas.executeQuery("SELECT ArenaType,ArenaName,ArenaLocation FROM SimonSays_Arenas WHERE ArenaID = '" + id + "';");
+									
+									if(res.next())
+									{
+										ArenaType = res.getString("ArenaType");
+										ArenaName = res.getString("ArenaName");
+										ArenaLocation = res.getString("ArenaLocation");
+										res.close();
+									}
+									else
+									{
+										id++;
+										continue;
+									}
+									
+									if(ArenaName.equals("|"))
+									{
+										id++;
+										continue;
+									}
+									
+									if(ArenaType.equals("0"))
+									{
+										player.sendMessage(SimonTag + "SimonArena (" + ArenaName + ") located at " + ArenaLocation + " type: GameArena");	
+									}
+									else
+									{
+										player.sendMessage(SimonTag + "SimonArena (" + ArenaName + ") located at " + ArenaLocation + " type: SpectatorArena");	
+									}
+									
+									id++;
+								}
+							} 
+							catch (SQLException e) 
+							{
+								SimonLog.logSevereError(e.getMessage());
+							}
+						}
+						else
+						{
+							String ArenaNames = SimonArenasM.getArenaConfig().getString("ArenaNames");
+							String ArenaLocs = SimonArenasM.getArenaConfig().getString("ArenaLocations");
+							String ArenaTypes = SimonArenasM.getArenaConfig().getString("ArenaTypes");
+
+							if(ArenaNames == null)
+							{
+								player.sendMessage(SimonTag + "Can't find any arenas to display...");
+								return true;
+							}
+							
+							String[] Names = null;
+							String[] Locations = null;
+							String[] Types = null;
+							
+							if(ArenaNames != null)
+							{
+								Names = ArenaNames.split(" | ");
+							}
+							
+							if(ArenaLocs != null)
+							{
+								Locations = ArenaLocs.split(" | ");
+							}
+							
+							if(ArenaTypes != null)
+							{
+								Types = ArenaTypes.split(" | ");
+							}
+							
+							int id = 0;
+							while(id < Names.length)
+							{	
+								try
+								{
+									if(Names[id].equals("DELETED") || Names[id].equals("|"))
+									{
+										id++;
+										continue;
+									}
+									
+									if(Types[id].equals("0"))
+									{
+										player.sendMessage(SimonTag + "SimonArena [" + Names[id] + "] located at " + Locations[id] + " type: GameArena");	
+									}
+									else
+									{
+										player.sendMessage(SimonTag + "SimonArena [" + Names[id] + "] located at " + Locations[id] + " type: SpectatorArena");	
+									}
+
+								}
+							    catch (IndexOutOfBoundsException ex )
+							    {
+							    	break;
+							    }
+								
+								id++;
+							}
+						}
+						
+						return true;
+					}
+					
 					return true;
-				}
-				
-				if(args.length != 1)
-				{
-					player.sendMessage(SimonTag + "Usage: /simonjoin <ArenaName>");
-					return true;
-				}
-				
-				String arenaname = args[0];
-	    		
-	    		if(SimonAM.getArena(arenaname).needsPlayers())
-	    		{
-		    		SimonAM.addPlayer(player, arenaname);
-		    		player.setGameMode(GameMode.SURVIVAL);	
-	    		}
-	    		else
-	    		{
-	    			player.sendMessage(SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
-	    		}
-	    		
-				return true;
-			}
-			
-			else if(CommandLabel.equalsIgnoreCase("simonleave") || CommandLabel.equalsIgnoreCase("sl"))
-			{
-				if(!player.hasPermission("SimonSays.leave"))
-				{
-					player.sendMessage(SimonTag + ChatColor.RED + "Access denied");
-					return true;
-				}
-				
-				String GameArena = SimonAM.getArenaIn(player);
-				
-				String RelatedArena = "none";
-				
-				if(UsingMySQL() == true)
-				{
-					RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
 				}
 				else
 				{
-					RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
+					showSimonHelp(player);
+					
+					return true;
 				}
-				
-				
-	    		SimonAM.removePlayer(player);
-	    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, RelatedArena);
-	    		player.sendMessage(SimonTag + "Successfully left the SimonArena!");
-				return true;
 			}
 		}
 		
 		return false;
-	}
-	
-	@EventHandler
-	public void onPlayerMove(PlayerMoveEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Player p = e.getPlayer();
-		
-		String GameArena = SimonAM.getArenaIn(p);
-		
-		if(SimonAM.IsPlaying(p))
-		{
-			Location to = e.getTo();
-			Location from = e.getFrom();
-			
-			switch(SimonGameType)
-			{
-				case SGAME_DONTMOVE:
-				{
-					if(to == from)
-					{
-						return;
-					}
-					
-					String RelatedArena = "";
-					
-					if(UsingMySQL() == true)
-					{
-						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-					}
-					else
-					{
-						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-					}
-					
-					p.sendMessage(SimonTag + "Ohhh, you moved! Abandoned Game!");
-					SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					break;
-				}
-				
-				case SGAME_WALK:
-				{
-					if(to != from)
-					{
-						SimonSGM.SimonActionSetDone(p);
-						
-						if(!SimonSGM.SimonMsgSent(p))
-						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
-							SimonSGM.SimonSetMsgSent(p);
-						}
-					}
-					break;
-				}
-				
-				case SGAME_FAKEWALK:
-				{
-					String RelatedArena = "";
-					
-					if(UsingMySQL() == true)
-					{
-						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-					}
-					else
-					{
-						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-					}
-					
-					p.sendMessage(SimonTag + "Ohhh, you walked! Abandoned Game!");
-					SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					break;
-				}
-				
-				case SGAME_JUMP:
-				{
-					if(to.getY() > from.getY())
-					{
-						Block block = e.getPlayer().getWorld().getBlockAt(new Location(e.getPlayer().getWorld(), e.getTo().getX(), e.getTo().getY()+2, e.getTo().getZ()));
-						
-						if(block.getType() == Material.AIR)
-						{
-							SimonSGM.SimonActionSetDone(p);
-							
-							if(!SimonSGM.SimonMsgSent(p))
-							{
-								p.sendMessage(SimonTag + "Great job! Lets Continue!");
-								SimonSGM.SimonSetMsgSent(p);
-							}
-						}
-					}
-					
-					break;
-				}
-				
-				case SGAME_FAKEJUMP:
-				{
-					if(e.getTo().getY() > e.getFrom().getY())
-					{
-						Block block = e.getPlayer().getWorld().getBlockAt(new Location(e.getPlayer().getWorld(), e.getTo().getX(), e.getTo().getY()+2, e.getTo().getZ()));
-						
-						if(block.getType() == Material.AIR)
-						{
-							String RelatedArena = "";
-							
-							if(UsingMySQL() == true)
-							{
-								RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-							}
-							else
-							{
-								RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-							}
-							
-							p.sendMessage(SimonTag + "Nope.. I didn't want you to jump! Abandoned Game!");
-							SimonAM.removePlayer(p);
-							SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onPlayerSneak(PlayerToggleSneakEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Player p = e.getPlayer();
-		
-		String GameArena = SimonAM.getArenaIn(p);
-		
-		if(SimonAM.IsPlaying(p))
-		{
-			switch(SimonGameType)
-			{
-				case SGAME_SNEAK:
-				{
-					SimonSGM.SimonActionSetDone(p);
-					
-					if(!SimonSGM.SimonMsgSent(p))
-					{
-						p.sendMessage(SimonTag + "Great job! Lets Continue!");
-						SimonSGM.SimonSetMsgSent(p);
-					}
-					
-					
-					break;
-				}
-				
-				case SGAME_FAKESNEAK:
-				{
-					String RelatedArena = "";
-					
-					if(UsingMySQL() == true)
-					{
-						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-					}
-					else
-					{
-						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-					}
-					
-					p.sendMessage(SimonTag + "Woops! You've mistaken! Abandoned Game!");
-					SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-				}
-			
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onPlayerSprint(PlayerToggleSprintEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Player p = e.getPlayer();
-		Boolean Sprinting = e.isSprinting();
-		
-		String GameArena = SimonAM.getArenaIn(p);
-		
-		if(SimonAM.IsPlaying(p))
-		{
-			switch(SimonGameType)
-			{
-				case SGAME_SPRINT:
-				{
-					if(Sprinting == true)
-					{
-						SimonSGM.SimonActionSetDone(p);
-						
-						if(!SimonSGM.SimonMsgSent(p))
-						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
-							SimonSGM.SimonSetMsgSent(p);
-						}
-					}
-					break;
-				}
-				
-				case SGAME_FAKESPRINT:
-				{
-					if(Sprinting == true)
-					{		
-						String RelatedArena = "";
-						
-						if(UsingMySQL() == true)
-						{
-							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-						}
-						else
-						{
-							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-						}
-						
-						p.sendMessage(SimonTag + "Nope. Abandoned Game!");
-						SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					}
-				}
-			
-			}
-		}
-	}
-
-	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Player p = e.getPlayer();
-		
-		Block block = e.getClickedBlock();
-		
-		if(block != null)
-		{
-			BlockState state = block.getState();
-			
-			if(state instanceof Sign)
-			{
-				if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.SIGN || e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.SIGN_POST)
-				{
-					Sign sign = (Sign) state;
-					
-					String[] SignLine = sign.getLines();
-					
-					if(SignLine[0].contains("[SimonSays]"))
-					{
-						if(!SignLine[1].isEmpty())
-						{	
-							if(SimonAM.getArena(SignLine[1]) != null)
-							{
-								if(!p.hasPermission("SimonSays.sign.use"))
-								{
-									p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
-									return;
-								}
-								
-					    		if(SimonAM.getArena(SignLine[1]).needsPlayers())
-					    		{
-						    		SimonAM.addPlayer(p, SignLine[1]);
-						    		p.setGameMode(GameMode.SURVIVAL);	
-					    		}
-					    		else
-					    		{
-					    			p.sendMessage(SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
-					    		}
-							}
-							else
-							{
-								p.sendMessage(SimonTag + "Arena join attempt denied. Invalid Arena!");
-							}
-						}
-					}
-				}
-			}
-			
-			String GameArena = SimonAM.getArenaIn(p);
-			
-			if(SimonAM.IsPlaying(p))
-			{
-				switch(SimonGameType)
-				{
-					case SGAME_PUNCHBLOCK:
-					{
-							
-						SimonSGM.SimonActionSetDone(p);
-						if(!SimonSGM.SimonMsgSent(p))
-						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
-							SimonSGM.SimonSetMsgSent(p);
-						}
-							
-						break;
-					}
-						
-					case SGAME_FAKEPUNCHBLOCK:
-					{
-						String RelatedArena = "";
-						
-						if(UsingMySQL() == true)
-						{
-							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-						}
-						else
-						{
-							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-						}
-						
-						p.sendMessage(SimonTag + "I confused you ah? Abandoned Game!");
-						SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					}
-				}
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onHitPlayer(EntityDamageByEntityEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Entity entattacker = e.getDamager();
-		
-		if(entattacker instanceof Player)
-		{
-			Player p = (Player)entattacker;
-
-			String GameArena = SimonAM.getArenaIn(p);
-			
-			if(SimonAM.IsPlaying(p))
-			{
-				switch(SimonGameType)
-				{
-					case SGAME_ATTACKPLAYER:
-					{
-						SimonSGM.SimonActionSetDone(p);
-						
-						if(!SimonSGM.SimonMsgSent(p))
-						{
-							p.sendMessage(SimonTag + "Ouch, Lets Continue!");
-							SimonSGM.SimonSetMsgSent(p);
-						}
-						
-						break;
-					}
-					
-					case SGAME_FAKEATTACKPLAYER:
-					{
-						String RelatedArena = "";
-						
-						if(UsingMySQL() == true)
-						{
-							RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-						}
-						else
-						{
-							RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-						}
-						
-						p.sendMessage(SimonTag + "Wrong move, mate. Abandoned Game!");
-						SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					}
-				}
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onDamaged(EntityDamageEvent e)
-	{
-		Entity ent = e.getEntity();
-		
-		if(ent instanceof Player)
-		{
-			Player p = (Player)ent;
-			
-			if(SimonAM.IsPlaying(p))
-			{
-				e.setCancelled(true);
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onSignChanged(SignChangeEvent e)
-	{
-		Sign arenasign = (Sign) e.getBlock().getState();
-		String[] SignLine = e.getLines();
-		
-		if(SignLine[0].contains("[SimonSays]"))
-		{
-			if(!SignLine[1].isEmpty())
-			{
-				if(!e.getPlayer().hasPermission("SimonSays.sign.create"))
-				{
-					e.getPlayer().sendMessage(SimonTag + ChatColor.RED + "Access denied");
-					e.getBlock().breakNaturally();
-					return;
-				}
-				
-				e.setLine(0, ChatColor.GREEN + "[SimonSays]");
-				
-				if(SimonAM.getArena(SignLine[1]) == null)
-				{
-					e.setLine(2, ChatColor.DARK_AQUA + "Invalid Arena");
-					e.setLine(3, ChatColor.DARK_AQUA + "ERROR...");
-					return;
-				}
-				
-				if(UsingMySQL() == true)
-				{
-					SimonSignsM.SQLaddSignArena(SignLine[1], SimonAM.serializeLoc(e.getBlock().getLocation()));
-				}
-				else
-				{
-					SimonSignsM.CFGaddSignArena(SignLine[1], SimonAM.serializeLoc(e.getBlock().getLocation()));
-				}
-				
-				SimonAM.getArena(SignLine[1]).setSign(arenasign);
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onBlockPlaced(BlockPlaceEvent e)
-	{
-		SimonGame SimonGameType = this.SimonSGC.GetGame();
-		
-		Material block = e.getBlock().getType();
-		
-		Player p = e.getPlayer();
-		
-		String GameArena = SimonAM.getArenaIn(p);
-		
-		if(SimonAM.IsPlaying(p))
-		{
-			switch(SimonGameType)
-			{
-				case SGAME_PLACEBLOCK:
-				{	
-					Material correctblock = SimonSGM.getBlockToPlace(p);
-					
-					if(correctblock.equals(block))
-					{
-						SimonSGM.SimonActionSetDone(p);
-						
-						if(!SimonSGM.SimonMsgSent(p))
-						{
-							p.sendMessage(SimonTag + "Good job! Lets Continue!");
-							SimonSGM.SimonSetMsgSent(p);
-							e.setCancelled(true);
-						}
-					}
-					
-					break;
-				}
-				
-				case SGAME_FAKEPLACEBLOCK:
-				{
-					String RelatedArena = "";
-					
-					if(UsingMySQL() == true)
-					{
-						RelatedArena = SimonCFGM.SQLGetRelatedGameArena(GameArena);
-					}
-					else
-					{
-						RelatedArena = SimonCFGM.CFGGetRelatedArena(GameArena);
-					}
-					
-					p.sendMessage(SimonTag + "You've mistaken! Abandoned Game!");
-					SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					
-					e.setCancelled(true);
-				}
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onSignBreak(BlockBreakEvent e)
-	{
-		if(e.getBlock().getState() instanceof Sign)
-		{
-			Sign arenasign = (Sign) e.getBlock().getState();
-			
-			String[] SignLines = arenasign.getLines();
-			
-			String SimonTag = SignLines[0];
-			String arenaname = SignLines[1];
-			
-			if(SimonTag.contains("[SimonSays]"))
-			{
-				if(!e.getPlayer().hasPermission("SimonSays.sign.destory"))
-				{
-					e.getPlayer().sendMessage(SimonTag + ChatColor.RED + "Access denied");
-					e.setCancelled(true);
-					return;
-				}
-				
-				if(UsingMySQL() == true)
-				{
-					if(SimonAM.getArena(arenaname) != null)
-					{
-						SimonSignsM.SQLremoveSignArena(arenaname);
-						SimonSignsM.SQLlinkSignsToArenas();
-						arenasign.update(false);
-						
-						SimonAM.getArena(arenaname).setSign(null);
-					}
-				}
-				else
-				{
-					if(SimonAM.getArena(arenaname) != null)
-					{
-						SimonSignsM.CFGRemoveSign(arenaname, SimonAM.serializeLoc(e.getBlock().getLocation()));
-						SimonSignsM.CFGlinkSignsToArenas();
-						arenasign.update(false);
-						
-						SimonAM.getArena(arenaname).setSign(null);
-					}
-				}
-			}
-		}
 	}
 	
 	public int getSimonSGCTask()
@@ -1067,5 +736,18 @@ public class SimonSays extends JavaPlugin implements Listener
 		}
 		
 		return false;
+	}
+	
+	public void showSimonHelp(Player player)
+	{
+		player.sendMessage(SimonTag + "------ SimonSays v" + ChatColor.YELLOW + getDescription().getVersion() + ChatColor.WHITE + " ------");
+		player.sendMessage(SimonTag + "Listing " + getDescription().getCommands().size() + " commands:");
+		player.sendMessage(SimonTag + "/simonsays - SimonSays's help command.");
+		player.sendMessage(SimonTag + "/simonsays arena creategame <ArenaName> <RelatedArena> - Creates a game arena linked with <RelatedArena> at your location.");
+		player.sendMessage(SimonTag + "/simonsays arena createspec <ArenaName> - Creates a spectator arena linked with <RelatedArena> at your location.");
+		player.sendMessage(SimonTag + "/simonsays arena delete <ArenaName> - Deletes <ArenaName>.");
+		player.sendMessage(SimonTag + "/simonsays arena list - Lists all existing arenas.");
+		player.sendMessage(SimonTag + "/simonsays join <ArenaName> - Joins <ArenaName>");
+		player.sendMessage(SimonTag + "/simonsays leave - Leaves your current arena.");
 	}
 }

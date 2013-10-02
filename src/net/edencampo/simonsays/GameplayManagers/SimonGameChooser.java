@@ -133,7 +133,7 @@ public class SimonGameChooser implements Runnable
 		{
 			case SGAME_NONE:
 			{
-				player.sendMessage(SimonTag + "Simon Says NONE! [Report the ERROR]");
+				player.sendMessage(SimonTag + "Simon Says NONE! (Woops? Error.)");
 				break;
 			}
 			
@@ -231,6 +231,7 @@ public class SimonGameChooser implements Runnable
 			
 			case SGAME_PLACEBLOCK:
 			{
+				@SuppressWarnings("deprecation")
 				Material randomblock = player.getTargetBlock(null, 5).getType();
 				
 				if(randomblock != null)
@@ -242,6 +243,7 @@ public class SimonGameChooser implements Runnable
 					
 					player.sendMessage(SimonTag + "Simon Says PLACE A " + randomblock.toString() + "!");
 					
+					player.getInventory().clear();
 					player.setItemInHand(new ItemStack(randomblock, 1, (short) 1));
 					plugin.SimonSGM.setBlockToPlace(player, randomblock);
 				}
@@ -251,6 +253,7 @@ public class SimonGameChooser implements Runnable
 			
 			case SGAME_FAKEPLACEBLOCK:
 			{	
+				@SuppressWarnings("deprecation")
 				Material randomblock = player.getTargetBlock(null, 5).getType();
 				
 				if(randomblock != null)
@@ -262,7 +265,7 @@ public class SimonGameChooser implements Runnable
 					
 					player.sendMessage(SimonTag + "PLACE A " + randomblock.toString() + "!");
 					
-					
+					player.getInventory().clear();
 					player.setItemInHand(new ItemStack(randomblock, 1, (short) 1));
 					plugin.SimonSGM.setBlockToPlace(player, randomblock);
 				}

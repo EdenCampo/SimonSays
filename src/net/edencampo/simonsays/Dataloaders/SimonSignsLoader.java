@@ -193,7 +193,7 @@ public class SimonSignsLoader
 				Statement createtables = connection.createStatement();
 				
 				createtables.executeUpdate("INSERT INTO SimonSays_SignLinks (`ArenaConnected`, `SignLocation`) VALUES ('" + arenatoconnect + "', '" + location +"');");
-				plugin.SimonLog.logInfo("Success! Added new arena:" + arenatoconnect + " (MySQL) ");
+				plugin.SimonLog.logInfo("Success! Added new sign:" + arenatoconnect + " (MySQL) ");
 			} 
 			catch (SQLException e) 
 			{
@@ -252,7 +252,7 @@ public class SimonSignsLoader
 
 		if(ArenaNames == null)
 		{
-			plugin.SimonLog.logInfo("Can't find arenas to load... Skipping!");
+			plugin.SimonLog.logInfo("Can't find signs to load... Skipping!");
 			return;
 		}
 		
@@ -294,11 +294,15 @@ public class SimonSignsLoader
 				
 			arenasign = (Sign) block.getState();
 
+			if(plugin.SimonAM.getArena(Names[id]) == null)
+			{
+				plugin.SimonLog.logInfo("Failed to link arena '" + Names[id] + "' with sign at " + Locations[id] + " invalid arena");
+				return;
+			}
+			
 			plugin.SimonAM.getArena(Names[id]).setSign(arenasign);
 				
 			plugin.SimonLog.logInfo("Successfully linked '" + Names[id] + "' with sign at " + Locations[id]);
-			
-			id++;
 			
 			id++;
 		}
@@ -314,14 +318,14 @@ public class SimonSignsLoader
 		
 		if(ArenaNames == null || ArenaLocs == null)
 		{
-			plugin.SimonLog.logWarning("Attempted to delete an arena from an empty cfg! Canceled!");
+			plugin.SimonLog.logWarning("Attempted to delete a sign from an empty cfg! Canceled!");
 		}
 		else
 		{	
 			plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", CFGremoveFromList(ArenaNames, GameArena));
 			plugin.SimonSignsM.getSignsConfig().set("SignLocations", CFGremoveFromList(ArenaLocs, location));
 			
-			plugin.SimonLog.logInfo("Deleting process finished for arena: " + GameArena);
+			plugin.SimonLog.logInfo("Deleting process finished for sign connected to: " + GameArena);
 			
 			plugin.SimonSignsM.saveSignsConfig();
 			plugin.SimonSignsM.reloadSignsConfig();
@@ -344,85 +348,4 @@ public class SimonSignsLoader
         
         return sb.toString().contains("|") ? sb.toString().substring(0, sb.lastIndexOf(" | ")) : sb.toString();
     }
-	
-	/*
-	public void CFGremoveSignArena(String GameArena)
-	{
-		String ArenaNames = plugin.SimonSignsM.getSignsConfig().getString("ArenasConnected");
-		String ArenaLocs = plugin.SimonSignsM.getSignsConfig().getString("SignLocations");
-		
-		if(ArenaNames == null || ArenaLocs == null)
-		{
-			plugin.SimonLog.logWarning("Attempted to delete a sign from an empty cfg! Canceled!");
-		}
-		else
-		{
-			String[] Names = ArenaNames.split(" | ");
-			String[] Locs = ArenaLocs.split(" | ");
-			
-			int id = 0;
-			int correctid = 0;
-			while(id < Names.length)
-			{			
-				if(!ArenaNames.contains(GameArena))
-				{
-					plugin.SimonLog.logWarning("Attempted to delete an non-existing sign! Canceled!");
-					return;
-				}
-				
-				if(Names[id].contains(GameArena))
-				{	
-					correctid = id+2;
-					break;
-				}
-				
-				id++;
-			}
-			
-			id = -1;
-			while(id < correctid)
-			{			
-				if(correctid == 2 && id == -1 && Names.length == 1)
-				{
-					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", null);
-					plugin.SimonSignsM.getSignsConfig().set("SignLocations", null);
-					
-					File signFile = new File(plugin.getDataFolder(), "SavedArenaSigns.yml");
-					signFile.delete();
-					
-					plugin.SimonSignsM.saveDefaultSignsConfig();
-					plugin.SimonSignsM.reloadSignsConfig();
-					
-					break;
-				}
-				
-				if(id == correctid-1)
-				{
-					String NewArenaNames = ArenaNames.replace(Names[correctid], "DELETED");
-					String NewArenaLocs = ArenaLocs.replace(Locs[correctid], "DELETED");
-					
-					plugin.SimonSignsM.getSignsConfig().set("ArenasConnected", NewArenaNames);
-					plugin.SimonSignsM.getSignsConfig().set("SignLocations", NewArenaLocs);
-					
-					id++;
-					continue;
-				}
-				
-				if(id == -1)
-				{
-					id++;
-					continue;
-				}
-				
-				id++;
-			}
-			
-			plugin.SimonSignsM.saveSignsConfig();
-			plugin.SimonSignsM.reloadSignsConfig();
-			
-			plugin.SimonSignsM.CFGlinkSignsToArenas();
-			
-			plugin.SimonLog.logInfo("Deleting sign link process finished for arena: " + GameArena);
-		}
-	}*/
 }

@@ -12,6 +12,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 
 public class SimonGameArenaManager
 {
@@ -113,6 +115,13 @@ public class SimonGameArenaManager
 		   
 		   plugin.SimonGSM.arenagamestage.put(plugin.SimonAM.getArena(a.getName()), "SGAMESTAGE_WAITINGPLAYERS");
 	   }
+	   
+	    Objective arenaob = plugin.SimonAM.getArena(a.getName()).getSimonBoard().getObjective(a.getName());
+	    Score players = arenaob.getScore(Bukkit.getOfflinePlayer(ChatColor.DARK_AQUA + "Players: "));
+	    	
+	    players.setScore(getArena(a.getName()).getPlayers().size());
+	    	
+	    plugin.SimonScore.removePlayerBoard(p);
 	}
 
 	public void createArena(Location loc, String arenaname)
@@ -174,6 +183,7 @@ public class SimonGameArenaManager
 			if(a.getPlayers().contains(p.getName()))
 				return a.getName();
 		}
+		
 		return "none";
 	}
 	

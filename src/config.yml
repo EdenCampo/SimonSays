@@ -12,5 +12,7 @@ password: pw
 
 minimumPlayers: 3
 
-configVersion: 1.0.4
+enableDebug: false
+
+configVersion: 1.0.6
 firstStartup: yes

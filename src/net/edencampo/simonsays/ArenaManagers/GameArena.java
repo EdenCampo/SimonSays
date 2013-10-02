@@ -7,11 +7,14 @@ import net.edencampo.simonsays.SimonSays;
 
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
+import org.bukkit.scoreboard.Scoreboard;
 
 public class GameArena
 {
 	SimonSays plugin;
 	
+	public Scoreboard scoreboard;
+	public int countdown = 10;
 	public String arenaname = "";
 	public Sign arenasign = null;
 	public Location spawn = null;
@@ -56,5 +59,25 @@ public class GameArena
 		}
 		
 		return true;
+	}
+	
+	public void setCountdown(int newcount)
+	{
+		countdown = newcount;
+	}
+	
+	public int getCountdown()
+	{
+		return countdown;
+	}
+
+	public void setSimonBoard(Scoreboard simonboard) 
+	{
+		scoreboard = simonboard;
+	}
+	
+	public Scoreboard getSimonBoard()
+	{
+		return scoreboard;
 	}
 }

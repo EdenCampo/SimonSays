@@ -55,7 +55,7 @@ public class SimonSpectateArenaManager
 		SpectateArena a = getArena(arenaname);
 	    if(a == null)
 	    {
-	        p.sendMessage(SimonTag + "Invalid arena!");
+	        p.sendMessage(SimonTag + "Invalid Spectator arena " + arenaname + "!");
 	        return;
 	    }
 	
