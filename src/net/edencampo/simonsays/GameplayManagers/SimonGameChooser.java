@@ -3,7 +3,6 @@ package net.edencampo.simonsays.GameplayManagers;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -21,8 +20,6 @@ public class SimonGameChooser implements Runnable
 	}
 	
 	private SimonGame result = SimonSays.SimonGame.SGAME_NONE;
-
-	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
 	@Override
 	public void run() 
@@ -133,98 +130,98 @@ public class SimonGameChooser implements Runnable
 		{
 			case SGAME_NONE:
 			{
-				player.sendMessage(SimonTag + "Simon Says NONE! (Woops? Error.)");
+				player.sendMessage(plugin.SimonTag + "Simon Says NONE! (Woops? Error.)");
 				break;
 			}
 			
 			case SGAME_DONTMOVE:
 			{
-				player.sendMessage(SimonTag + "Simon Says DONT MOVE!");
+				player.sendMessage(plugin.SimonTag + "Simon Says DONT MOVE!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_FAKEDONTMOVE:
 			{
-				player.sendMessage(SimonTag + "DONT MOVE!");
+				player.sendMessage(plugin.SimonTag + "DONT MOVE!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_SNEAK:
 			{
-				player.sendMessage(SimonTag + "Simon Says SNEAK!");
+				player.sendMessage(plugin.SimonTag + "Simon Says SNEAK!");
 				break;
 			}
 			
 			case SGAME_FAKESNEAK:
 			{
-				player.sendMessage(SimonTag + "SNEAK!");
+				player.sendMessage(plugin.SimonTag + "SNEAK!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_JUMP:
 			{
-				player.sendMessage(SimonTag + "Simon Says JUMP!");
+				player.sendMessage(plugin.SimonTag + "Simon Says JUMP!");
 				break;
 			}
 			
 			case SGAME_FAKEJUMP:
 			{
-				player.sendMessage(SimonTag + "JUMP!");
+				player.sendMessage(plugin.SimonTag + "JUMP!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_ATTACKPLAYER:
 			{
-				player.sendMessage(SimonTag + "Simon Says Attack a Player!");
+				player.sendMessage(plugin.SimonTag + "Simon Says Attack a Player!");
 				break;
 			}
 			
 			case SGAME_FAKEATTACKPLAYER:
 			{
-				player.sendMessage(SimonTag + "Attack a Player!");
+				player.sendMessage(plugin.SimonTag + "Attack a Player!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_PUNCHBLOCK:
 			{
-				player.sendMessage(SimonTag + "Simon Says Punch a BLOCK!");
+				player.sendMessage(plugin.SimonTag + "Simon Says Punch a BLOCK!");
 				break;
 			}
 			
 			case SGAME_FAKEPUNCHBLOCK:
 			{
-				player.sendMessage(SimonTag + "Punch a BLOCK!");
+				player.sendMessage(plugin.SimonTag + "Punch a BLOCK!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_SPRINT:
 			{
-				player.sendMessage(SimonTag + "Simon Says SPRINT!");
+				player.sendMessage(plugin.SimonTag + "Simon Says SPRINT!");
 				break;
 			}
 			
 			case SGAME_FAKESPRINT:
 			{
-				player.sendMessage(SimonTag + "SPRINT!");
+				player.sendMessage(plugin.SimonTag + "SPRINT!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
 			
 			case SGAME_WALK:
 			{
-				player.sendMessage(SimonTag + "Simon Says WALK!");
+				player.sendMessage(plugin.SimonTag + "Simon Says WALK!");
 				break;
 			}
 			
 			case SGAME_FAKEWALK:
 			{
-				player.sendMessage(SimonTag + "WALK!");
+				player.sendMessage(plugin.SimonTag + "WALK!");
 				plugin.SimonSGM.SimonActionSetDone(player);
 				break;
 			}
@@ -241,7 +238,7 @@ public class SimonGameChooser implements Runnable
 						randomblock = Material.SPONGE;
 					}
 					
-					player.sendMessage(SimonTag + "Simon Says PLACE A " + randomblock.toString() + "!");
+					player.sendMessage(plugin.SimonTag + "Simon Says PLACE A " + randomblock.toString() + "!");
 					
 					player.getInventory().clear();
 					player.setItemInHand(new ItemStack(randomblock, 1, (short) 1));
@@ -263,7 +260,7 @@ public class SimonGameChooser implements Runnable
 						randomblock = Material.SPONGE;
 					}
 					
-					player.sendMessage(SimonTag + "PLACE A " + randomblock.toString() + "!");
+					player.sendMessage(plugin.SimonTag + "PLACE A " + randomblock.toString() + "!");
 					
 					player.getInventory().clear();
 					player.setItemInHand(new ItemStack(randomblock, 1, (short) 1));

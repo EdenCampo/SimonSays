@@ -1,26 +1,15 @@
 package net.edencampo.simonsays.GameplayManagers;
 
 import net.edencampo.simonsays.SimonSays;
-import net.edencampo.simonsays.ArenaManagers.GameArena;
+import net.edencampo.simonsays.ArenaManagers.SimonArena;
+import net.edencampo.simonsays.ArenaManagers.SimonArena.ARENA_STAGE;
 
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 import org.bukkit.event.Listener;
-import java.util.HashMap;
 
 public class SimonGameStagesManager implements Listener, Runnable 
 {
-	public enum SimonGameStage
-	{
-		SGAMESTAGE_ERROR,
-		SGAMESTAGE_WAITINGPLAYERS,
-		SGAMESTAGE_PREPERING,
-		SGAMESTAGE_INPROGRESS,
-		SGAMESTAGE_ENDED
-	}
-	
-	public HashMap<GameArena,String> arenagamestage = new HashMap<GameArena, String>();
-    
     SimonSays plugin;
     
     public SimonGameStagesManager(SimonSays instance)
@@ -31,7 +20,7 @@ public class SimonGameStagesManager implements Listener, Runnable
     @Override
     public void run() 
     {
-		for(GameArena a : plugin.SimonAM.arenas)
+		for(SimonArena a : plugin.SimonAM.simonArenas)
 		{
 			String name = a.getName();
 			
@@ -57,30 +46,41 @@ public class SimonGameStagesManager implements Listener, Runnable
    		}
    				
    		sign.setLine(2, plugin.SimonAM.getArena(arenaname).getPlayers().size() + "/10 players");
+   		
+   		ARENA_STAGE arenaStage = plugin.SimonAM.getArena(arenaname).arenaStage;
+   		
+   		switch(arenaStage)
+   		{
+   			case SGAMESTAGE_ERROR:
+   			{
+   				sign.setLine(3, ChatColor.DARK_AQUA + "Sign Error..");
+   				break;
+   			}
    			
-   		String gamestage = arenagamestage.get(plugin.SimonAM.getArena(arenaname));
-
-   		if(gamestage.equals("SGAMESTAGE_ERROR"))
-   		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "SIGN ERROR..");
-   		}
-   		else if(gamestage.equals("SGAMESTAGE_WAITINGPLAYERS"))
-   		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
-   		}
-   		else if(gamestage.equals("SGAMESTAGE_PREPERING"))
-   		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "Starting..");
-   		}
-   		else if(gamestage.equals("SGAMESTAGE_INPROGRESS"))
-   		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
-   		}
-   		else if(gamestage.equals("SGAMESTAGE_ENDED"))
-   		{
-   			sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
-   		}
-   				
+   			case SGAMESTAGE_WAITINGPLAYERS:
+   			{
+   				sign.setLine(3, ChatColor.DARK_AQUA + "Waiting..");
+   				break;
+   			}
+   			
+   			case SGAMESTAGE_PREPERING:
+   			{
+   				sign.setLine(3, ChatColor.DARK_AQUA + "Starting..");
+   				break;
+   			}
+   			
+   			case SGAMESTAGE_INPROGRESS:
+   			{
+   				sign.setLine(3, ChatColor.DARK_AQUA + "In Progress..");
+   				break;
+   			}
+   			
+   			case SGAMESTAGE_ENDED:
+   			{
+   				sign.setLine(3, ChatColor.DARK_AQUA + "Restarting...");
+   				break;
+   			}
+   		}	
    		sign.update(true);
     }
 }

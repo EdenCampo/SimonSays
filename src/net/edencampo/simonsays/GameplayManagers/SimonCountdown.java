@@ -1,6 +1,8 @@
 package net.edencampo.simonsays.GameplayManagers;
 
 import net.edencampo.simonsays.SimonSays;
+import net.edencampo.simonsays.ArenaManagers.SimonArena;
+import net.edencampo.simonsays.ArenaManagers.SimonArena.ARENA_STAGE;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -15,14 +17,14 @@ public class SimonCountdown implements Runnable
 		this.plugin = instance;
 	}
 	
-	String GameArena = "";
+	SimonArena simonArena = null;
 	
 	int second = 10;
 	int task;
 	
-	public void CountDown(String ArenaName)
+	public void countDown(SimonArena sArena)
 	{
-		GameArena = ArenaName;
+		simonArena = sArena;
 		
 		task = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
 	}
@@ -41,14 +43,13 @@ public class SimonCountdown implements Runnable
 		{		
 			String PlayerArena = plugin.SimonAM.getArenaIn(p);
 				
-			if(PlayerArena.equalsIgnoreCase(GameArena))
+			if(PlayerArena.equalsIgnoreCase(simonArena.arenaName))
 			{	
-				
 				if(second != 0)
 				{
 					p.sendMessage(plugin.SimonTag + ChatColor.BOLD + "" + second);
 					
-					plugin.SimonLog.logDebug("Waiting... Arena " + GameArena + " second:" + second);
+					plugin.SimonLog.logDebug("Waiting... Arena " + simonArena + " second:" + second);
 				}
 				
 				switch(second)
@@ -56,11 +57,11 @@ public class SimonCountdown implements Runnable
 					case 0:
 					{
 						p.sendMessage(plugin.SimonTag + ChatColor.DARK_AQUA + "GO!");
-						plugin.SimonGSM.arenagamestage.put(plugin.SimonAM.getArena(GameArena), "SGAMESTAGE_INPROGRESS");
-						p.teleport(plugin.SimonAM.getArena(GameArena).spawn);
-						plugin.SimonScore.createSimonBoard(GameArena);
+						simonArena.arenaStage = ARENA_STAGE.SGAMESTAGE_INPROGRESS;
+						p.teleport(simonArena.arenaSpawn);
+						plugin.SimonScore.createSimonBoard(simonArena.arenaName);
 						
-						plugin.SimonLog.logDebug("Successfully started a game at arena " + GameArena);
+						plugin.SimonLog.logDebug("Successfully started a game at arena " + simonArena);
 					}
 				}
 			}

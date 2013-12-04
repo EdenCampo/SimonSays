@@ -1,8 +1,8 @@
 package net.edencampo.simonsays.GameplayManagers;
 
 import net.edencampo.simonsays.SimonSays;
-import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
 import net.edencampo.simonsays.SimonSays.SimonGame;
+import net.edencampo.simonsays.ArenaManagers.SimonArenaManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -28,14 +28,14 @@ import org.bukkit.event.player.PlayerToggleSprintEvent;
 
 public class SimonGameEvents implements Listener
 {
-	public SimonSays plugin;
+	SimonSays plugin;
+	SimonArenaManager gManager;;
 	
 	public SimonGameEvents(SimonSays instance)
 	{
-		this.plugin = instance;
+		plugin = instance;
+		gManager = new SimonArenaManager(plugin);
 	}
-	
-	String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e)
@@ -71,9 +71,9 @@ public class SimonGameEvents implements Listener
 						RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "Ohhh, you moved! Abandoned Game!");
+					p.sendMessage(plugin.SimonTag + "Ohhh, you moved! Abandoned Game!");
 					plugin.SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+					gManager.specPlayer(p, RelatedArena);
 					break;
 				}
 				
@@ -85,7 +85,7 @@ public class SimonGameEvents implements Listener
 						
 						if(!plugin.SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
+							p.sendMessage(plugin.SimonTag + "Great job! Lets Continue!");
 							plugin.SimonSGM.SimonSetMsgSent(p);
 						}
 					}
@@ -105,10 +105,10 @@ public class SimonGameEvents implements Listener
 						RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "Ohhh, you walked! Abandoned Game!");
+					p.sendMessage(plugin.SimonTag + "Ohhh, you walked! Abandoned Game!");
 					
 					plugin.SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+					gManager.specPlayer(p, RelatedArena);
 					break;
 				}
 				
@@ -124,7 +124,7 @@ public class SimonGameEvents implements Listener
 							
 							if(!plugin.SimonSGM.SimonMsgSent(p))
 							{
-								p.sendMessage(SimonTag + "Great job! Lets Continue!");
+								p.sendMessage(plugin.SimonTag + "Great job! Lets Continue!");
 								plugin.SimonSGM.SimonSetMsgSent(p);
 							}
 						}
@@ -152,9 +152,9 @@ public class SimonGameEvents implements Listener
 								RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 							}
 							
-							p.sendMessage(SimonTag + "Nope.. I didn't want you to jump! Abandoned Game!");
+							p.sendMessage(plugin.SimonTag + "Nope.. I didn't want you to jump! Abandoned Game!");
 							plugin.SimonAM.removePlayer(p);
-							SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+							gManager.specPlayer(p, RelatedArena);
 						}
 					}
 				}
@@ -181,7 +181,7 @@ public class SimonGameEvents implements Listener
 					
 					if(!plugin.SimonSGM.SimonMsgSent(p))
 					{
-						p.sendMessage(SimonTag + "Great job! Lets Continue!");
+						p.sendMessage(plugin.SimonTag + "Great job! Lets Continue!");
 						plugin.SimonSGM.SimonSetMsgSent(p);
 					}
 					
@@ -202,9 +202,9 @@ public class SimonGameEvents implements Listener
 						RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "Woops! You've mistaken! Abandoned Game!");
+					p.sendMessage(plugin.SimonTag + "Woops! You've mistaken! Abandoned Game!");
 					plugin.SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+					gManager.specPlayer(p, RelatedArena);
 				}
 			
 			}
@@ -233,7 +233,7 @@ public class SimonGameEvents implements Listener
 						
 						if(!plugin.SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
+							p.sendMessage(plugin.SimonTag + "Great job! Lets Continue!");
 							plugin.SimonSGM.SimonSetMsgSent(p);
 						}
 					}
@@ -255,9 +255,9 @@ public class SimonGameEvents implements Listener
 							RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 						}
 						
-						p.sendMessage(SimonTag + "Nope. Abandoned Game!");
+						p.sendMessage(plugin.SimonTag + "Nope. Abandoned Game!");
 						plugin.SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+						gManager.specPlayer(p, RelatedArena);
 					}
 				}
 			
@@ -294,7 +294,7 @@ public class SimonGameEvents implements Listener
 							{
 								if(!p.hasPermission("SimonSays.sign.use"))
 								{
-									p.sendMessage(SimonTag + ChatColor.RED + "Access denied");
+									p.sendMessage(plugin.SimonTag + ChatColor.RED + "Access denied");
 									return;
 								}
 								
@@ -305,12 +305,12 @@ public class SimonGameEvents implements Listener
 					    		}
 					    		else
 					    		{
-					    			p.sendMessage(SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
+					    			p.sendMessage(plugin.SimonTag + "Woops! Game is already in progress! (or arena is invalid)");
 					    		}
 							}
 							else
 							{
-								p.sendMessage(SimonTag + "Arena join attempt denied. Invalid Arena!");
+								p.sendMessage(plugin.SimonTag + "Arena join attempt denied. Invalid Arena!");
 							}
 						}
 					}
@@ -329,7 +329,7 @@ public class SimonGameEvents implements Listener
 						plugin.SimonSGM.SimonActionSetDone(p);
 						if(!plugin.SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "Great job! Lets Continue!");
+							p.sendMessage(plugin.SimonTag + "Great job! Lets Continue!");
 							plugin.SimonSGM.SimonSetMsgSent(p);
 						}
 							
@@ -349,9 +349,9 @@ public class SimonGameEvents implements Listener
 							RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 						}
 						
-						p.sendMessage(SimonTag + "I confused you ah? Abandoned Game!");
+						p.sendMessage(plugin.SimonTag + "I confused you ah? Abandoned Game!");
 						plugin.SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+						gManager.specPlayer(p, RelatedArena);
 					}
 				}
 			}
@@ -381,7 +381,7 @@ public class SimonGameEvents implements Listener
 						
 						if(!plugin.SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "Ouch, Lets Continue!");
+							p.sendMessage(plugin.SimonTag + "Ouch (: Lets Continue!");
 							plugin.SimonSGM.SimonSetMsgSent(p);
 						}
 						
@@ -401,9 +401,9 @@ public class SimonGameEvents implements Listener
 							RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 						}
 						
-						p.sendMessage(SimonTag + "Wrong move, mate. Abandoned Game!");
+						p.sendMessage(plugin.SimonTag + "Wrong move, mate. Abandoned Game!");
 						plugin.SimonAM.removePlayer(p);
-						SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+						gManager.specPlayer(p, RelatedArena);
 					}
 				}
 			}
@@ -438,7 +438,7 @@ public class SimonGameEvents implements Listener
 			{
 				if(!e.getPlayer().hasPermission("SimonSays.sign.create"))
 				{
-					e.getPlayer().sendMessage(SimonTag + ChatColor.RED + "Access denied");
+					e.getPlayer().sendMessage(plugin.SimonTag + ChatColor.RED + "Access denied");
 					e.getBlock().breakNaturally();
 					return;
 				}
@@ -461,7 +461,7 @@ public class SimonGameEvents implements Listener
 					plugin.SimonSignsM.CFGaddSignArena(SignLine[1], plugin.SimonAM.serializeLoc(e.getBlock().getLocation()));
 				}
 				
-				plugin.SimonAM.getArena(SignLine[1]).setSign(arenasign);
+				plugin.SimonAM.getArena(SignLine[1]).arenaSign = arenasign;
 			}
 		}
 	}
@@ -491,7 +491,7 @@ public class SimonGameEvents implements Listener
 						
 						if(!plugin.SimonSGM.SimonMsgSent(p))
 						{
-							p.sendMessage(SimonTag + "Good job! Lets Continue!");
+							p.sendMessage(plugin.SimonTag + "Good job! Lets Continue!");
 							plugin.SimonSGM.SimonSetMsgSent(p);
 							e.setCancelled(true);
 						}
@@ -513,9 +513,9 @@ public class SimonGameEvents implements Listener
 						RelatedArena = plugin.SimonArenasM.CFGGetRelatedArena(GameArena);
 					}
 					
-					p.sendMessage(SimonTag + "You've mistaken! Abandoned Game!");
+					p.sendMessage(plugin.SimonTag + "You've mistaken! Abandoned Game!");
 					plugin.SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
+					gManager.specPlayer(p, RelatedArena);
 					
 					e.setCancelled(true);
 				}
@@ -552,7 +552,7 @@ public class SimonGameEvents implements Listener
 						plugin.SimonSignsM.SQLlinkSignsToArenas();
 						arenasign.update(false);
 						
-						plugin.SimonAM.getArena(arenaname).setSign(null);
+						plugin.SimonAM.getArena(arenaname).arenaSign = null;
 					}
 				}
 				else
@@ -563,7 +563,7 @@ public class SimonGameEvents implements Listener
 						plugin.SimonSignsM.CFGlinkSignsToArenas();
 						arenasign.update(false);
 						
-						plugin.SimonAM.getArena(arenaname).setSign(null);
+						plugin.SimonAM.getArena(arenaname).arenaSign = null;
 					}
 				}
 			}

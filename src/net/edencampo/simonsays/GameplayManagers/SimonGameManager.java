@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import net.edencampo.simonsays.SimonSays;
-import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -19,8 +17,6 @@ public class SimonGameManager implements Runnable
 	List<String> playermesseged = new ArrayList<String>();
 	
 	HashMap<Player, Material> playerblockplace = new HashMap<Player, Material>();
-	
-	private String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
 	public SimonGameManager(SimonSays instance)
 	{
@@ -86,8 +82,8 @@ public class SimonGameManager implements Runnable
 					String RelatedArena = plugin.SimonArenasM.SQLGetRelatedGameArena(GameArena);
 					
 					plugin.SimonAM.removePlayer(p);
-					SimonSpectateArenaManager.getSpecManager().specPlayer(p, RelatedArena);
-					p.sendMessage(SimonTag + "Action not completed! Abandoned Game!");
+					plugin.SimonAM.specPlayer(p, RelatedArena);
+					p.sendMessage(plugin.SimonTag + "Action not completed! Abandoned Game!");
 					
 					plugin.SimonLog.logDebug("Dropped player " + p.getName() + " from arena " + GameArena);
 					plugin.SimonLog.logDebug("Found related arena " + RelatedArena + " to teleport the player to.");

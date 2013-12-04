@@ -167,7 +167,7 @@ public class SimonSignsLoader
 				
 				Sign arenasign = (Sign) block.getState();
 				
-				plugin.SimonAM.getArena(ArenaConnected).setSign(arenasign);
+				plugin.SimonAM.getArena(ArenaConnected).arenaSign = arenasign;
 				
 				plugin.SimonLog.logInfo("Successfully linked '" + ArenaConnected + "' with sign at " + SignLoc);
 				
@@ -300,7 +300,7 @@ public class SimonSignsLoader
 				return;
 			}
 			
-			plugin.SimonAM.getArena(Names[id]).setSign(arenasign);
+			plugin.SimonAM.getArena(Names[id]).arenaSign = arenasign;
 				
 			plugin.SimonLog.logInfo("Successfully linked '" + Names[id] + "' with sign at " + Locations[id]);
 			

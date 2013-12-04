@@ -26,28 +26,31 @@ public class SimonScoreManager
 	{
 		Scoreboard simonboard = manager.getNewScoreboard();
 		
-		Objective objective = simonboard.registerNewObjective(Arena, "dummy");
-		
-		objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-		
-		objective.setDisplayName("SimonArena: " + Arena);
-		
-		Score score = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.DARK_AQUA + "Players: "));
-		score.setScore(plugin.SimonAM.getArena(Arena).getPlayers().size());
-		
-		for(Player p : Bukkit.getOnlinePlayers())
+		if(simonboard != null)
 		{
-			if(plugin.SimonAM.getArenaIn(p).equalsIgnoreCase(Arena))
+			Objective objective = simonboard.registerNewObjective(Arena, "dummy");
+			
+			objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+			
+			objective.setDisplayName("SimonArena: " + Arena);
+			
+			Score score = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.DARK_AQUA + "Players: "));
+			score.setScore(plugin.SimonAM.getArena(Arena).getPlayers().size());
+			
+			for(Player p : Bukkit.getOnlinePlayers())
 			{
-				p.setScoreboard(simonboard);
-				
-				Score score1 = objective.getScore(p);
-				
-				score1.setScore(0);
+				if(plugin.SimonAM.getArenaIn(p).equalsIgnoreCase(Arena))
+				{
+					p.setScoreboard(simonboard);
+					
+					Score score1 = objective.getScore(p);
+					
+					score1.setScore(0);
+				}
 			}
 		}
 		
-		plugin.SimonAM.getArena(Arena).setSimonBoard(simonboard);
+		plugin.SimonAM.getArena(Arena).arenaScoreboard = simonboard;
 		
 		plugin.SimonLog.logDebug("Successfully created a 'SimonBoard' for arena " + Arena + "!");
 	}

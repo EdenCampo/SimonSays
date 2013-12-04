@@ -7,9 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import net.edencampo.simonsays.ArenaManagers.GameArena;
-import net.edencampo.simonsays.ArenaManagers.SimonGameArenaManager;
-import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
+import net.edencampo.simonsays.ArenaManagers.SimonArena;
+import net.edencampo.simonsays.ArenaManagers.SimonArena.ARENA_STAGE;
+import net.edencampo.simonsays.ArenaManagers.SimonArenaManager;
 import net.edencampo.simonsays.Dataloaders.SimonArenaLoader;
 import net.edencampo.simonsays.Dataloaders.SimonSignsLoader;
 import net.edencampo.simonsays.GameplayManagers.SimonCountdown;
@@ -75,10 +75,11 @@ public class SimonSays extends JavaPlugin implements Listener
 	public SimonSignsLoader SimonSignsM = new SimonSignsLoader(this);
 	public SimonGameStagesManager SimonGSM = new SimonGameStagesManager(this);
 	public SimonCountdown SimonCD = new SimonCountdown(this);
-	public SimonGameArenaManager SimonAM = new SimonGameArenaManager(this);
+	public SimonArenaManager SimonAM = new SimonArenaManager(this);
 	public SimonGameEvents SimonGE = new SimonGameEvents(this);
 	public SimonScoreManager SimonScore = new SimonScoreManager(this);
 	
+	// TODO: Make static
 	public String SimonTag = ChatColor.BLACK + "[" + ChatColor.GREEN + "SimonSays" + ChatColor.BLACK + "]" + " " + ChatColor.WHITE;
 	
 	public MySQL sql;
@@ -216,7 +217,7 @@ public class SimonSays extends JavaPlugin implements Listener
 				
 				sql.openConnection();
 				
-				SimonLog.logDebug("Opened!");
+				SimonLog.logDebug("Connection opened!");
 				
 				Statement createtables = sql.getConnection().createStatement();
 				createtables.executeUpdate("CREATE TABLE IF NOT EXISTS SimonSays_Arenas(ArenaName varchar(255) NOT NULL, ArenaLocation varchar(255) NOT NULL, ArenaType varchar(255) NOT NULL, RelatedArena varchar(255) NOT NULL, ArenaID int(255) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ArenaID`))");
@@ -261,11 +262,11 @@ public class SimonSays extends JavaPlugin implements Listener
 			SimonLog.logDebug("Checked for updates.");
 		}
 		
-		for(GameArena a : SimonAM.arenas)
+		for(SimonArena a : SimonAM.simonArenas)
 		{		
-			SimonGSM.arenagamestage.put(a, "SGAMESTAGE_WAITINGPLAYERS");
+			a.arenaStage = ARENA_STAGE.SGAMESTAGE_WAITINGPLAYERS;
 			
-			SimonLog.logDebug("GameArena " + a + " is now SGAMESTAGE_WAITINGPLAYERS");
+			SimonLog.logDebug("SimonArena " + a + " is now SGAMESTAGE_WAITINGPLAYERS");
 		}
 		
 		Bukkit.getPluginManager().registerEvents(SimonGE, this);
@@ -276,9 +277,7 @@ public class SimonSays extends JavaPlugin implements Listener
 	}
 	
 	public void onDisable()
-	{
-		SimonGSM.arenagamestage.clear();
-		
+	{		
 		SimonLog.logInfo("Successfully unloaded!");
 	}
 	
@@ -310,7 +309,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		
 		if(update.equalsIgnoreCase("true") || update.equalsIgnoreCase("yes"))
 		{
-			Updater updater = new Updater(this, "simon-says", this.getFile(), Updater.UpdateType.DEFAULT, true);
+			Updater updater = new Updater(this, 64788, this.getFile(), Updater.UpdateType.DEFAULT, true);
 			
 	        Updater.UpdateResult upresult = updater.getResult();
 	        
@@ -338,7 +337,7 @@ public class SimonSays extends JavaPlugin implements Listener
 		{
 			Player player = (Player) sender;
 			
-			if(cmd.getName().equalsIgnoreCase("simonsays") || cmd.getName().equalsIgnoreCase("ss"))
+			if(cmd.getName().equalsIgnoreCase("simonsays"))
 			{
 				if(args.length == 0)
 				{
@@ -409,7 +408,7 @@ public class SimonSays extends JavaPlugin implements Listener
 					
 		    		SimonAM.removePlayer(player);
 		    		
-		    		SimonSpectateArenaManager.getSpecManager().specPlayer(player, RelatedArena);
+		    		SimonAM.specPlayer(player, RelatedArena);
 		    		
 		    		player.sendMessage(SimonTag + "Successfully left " + GameArena + " !");
 		    		
@@ -454,7 +453,7 @@ public class SimonSays extends JavaPlugin implements Listener
 			    		
 			    		SimonLog.logInfo(player.getName() + " Created game arena " + arenaname);
 			    		
-			    		SimonGSM.arenagamestage.put(SimonAM.getArena(arenaname), "SGAMESTAGE_WAITINGPLAYERS");
+			    		SimonAM.getArena(arenaname).arenaStage = ARENA_STAGE.SGAMESTAGE_WAITINGPLAYERS;
 			    		
 						return true;
 					}
@@ -474,7 +473,7 @@ public class SimonSays extends JavaPlugin implements Listener
 						
 						String arenaname = args[2];
 						
-				  		SimonSpectateArenaManager.getSpecManager().createArena(player.getLocation(), arenaname);
+				  		SimonAM.createArena(player.getLocation(), arenaname);
 				  		
 				  		if(UsingMySQL() == true)
 				  		{
@@ -544,7 +543,7 @@ public class SimonSays extends JavaPlugin implements Listener
 								{
 									type = "1";
 									
-									location = SimonAM.serializeLoc(SimonSpectateArenaManager.getSpecManager().getArena(arenaname).spawn);
+									location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).arenaSpawn);
 								}
 								else
 								{
@@ -552,7 +551,7 @@ public class SimonSays extends JavaPlugin implements Listener
 									
 									RelatedArena = SimonArenasM.CFGGetRelatedArena(arenaname);
 									
-									location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).spawn);
+									location = SimonAM.serializeLoc(SimonAM.getArena(arenaname).arenaSpawn);
 								}
 								
 								

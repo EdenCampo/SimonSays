@@ -10,9 +10,7 @@ import java.sql.Statement;
 import java.util.logging.Level;
 
 import net.edencampo.simonsays.SimonSays;
-import net.edencampo.simonsays.ArenaManagers.GameArena;
-import net.edencampo.simonsays.ArenaManagers.SimonSpectateArenaManager;
-import net.edencampo.simonsays.ArenaManagers.SpectateArena;
+import net.edencampo.simonsays.ArenaManagers.SimonArena;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -189,17 +187,17 @@ public class SimonArenaLoader
 				
 				if(ArenaType.equals("0"))
 				{
-					GameArena a = new GameArena(plugin.SimonAM.deserializeLoc(ArenaLocation), ArenaName, plugin);
-					plugin.SimonAM.arenas.add(a);
+					SimonArena a = new SimonArena(plugin.SimonAM.deserializeLoc(ArenaLocation), ArenaName, plugin);
+					plugin.SimonAM.simonArenas.add(a);
 					plugin.SimonAM.getArena(ArenaName).spawn = plugin.SimonAM.deserializeLoc(ArenaLocation);
 						
 					plugin.SimonLog.logInfo("Successfully loaded game arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: GameArena");
 				}
 				else if(ArenaType.equals("1"))
 				{
-					SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(ArenaLocation), ArenaName);
-					SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-					SimonSpectateArenaManager.getSpecManager().getArena(ArenaName).spawn = plugin.SimonAM.deserializeLoc(ArenaLocation);
+					SimonArena a =  new SimonArena(plugin.SimonAM.deserializeLoc(ArenaLocation), ArenaName);
+					plugin.SimonAM.simonArenas.add(a);
+					plugin.SimonAM.getArena(ArenaName).arenaSpawn = plugin.SimonAM.deserializeLoc(ArenaLocation);
 						
 					plugin.SimonLog.logInfo("Successfully loaded spec arena:" + " " +  ArenaName + " at " + ArenaLocation + " " +  "type: SpectateArena");
 				}
@@ -237,7 +235,6 @@ public class SimonArenaLoader
 			{
 				e.printStackTrace();
 			}
-		
 		}
 		return "none";
 	}
@@ -306,17 +303,17 @@ public class SimonArenaLoader
 				
 				if(Types[id].equals("0"))
 				{
-					GameArena a = new GameArena(plugin.SimonAM.deserializeLoc(Locations[id]), Names[id], plugin);
-					plugin.SimonAM.arenas.add(a);
-					plugin.SimonAM.getArena(Names[id]).spawn = plugin.SimonAM.deserializeLoc(Locations[id]);
+					SimonArena a = new SimonArena(plugin.SimonAM.deserializeLoc(Locations[id]), Names[id], plugin);
+					plugin.SimonAM.simonArenas.add(a);
+					plugin.SimonAM.getArena(Names[id]).arenaSpawn = plugin.SimonAM.deserializeLoc(Locations[id]);
 					
 					plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at " + Locations[id] + " " +  "type: 'GameArena'");
 				}
 				else if(Types[id].equals("1"))
 				{
-					SpectateArena a =  new SpectateArena(SimonSpectateArenaManager.getSpecManager().deserializeLoc(Locations[id]), Names[id]);
-					SimonSpectateArenaManager.getSpecManager().arenas.add(a);
-					SimonSpectateArenaManager.getSpecManager().getArena(Names[id]).spawn = plugin.SimonAM.deserializeLoc(Locations[id]);
+					SimonArena a =  new SimonArena(plugin.SimonAM.deserializeLoc(Locations[id]), Names[id]);
+					plugin.SimonAM.simonArenas.add(a);
+					plugin.SimonAM.getArena(Names[id]).arenaSpawn = plugin.SimonAM.deserializeLoc(Locations[id]);
 					
 					plugin.SimonLog.logInfo("Loaded arena:" + " '" +  Names[id] + "' at '" + Locations[id] + "' " +  "type: 'SpectateArena'");
 				}
